@@ -6,6 +6,7 @@ public class LsbSteganography {
      */
     public static byte[] embed(byte[] carrierData, byte[] dataToHide) {
         if (carrierData.length < dataToHide.length * 8) {
+            // Manejar el caso de usar un bit menos significativo mas
             throw new IllegalArgumentException("No hay suficientes bytes para ocultar la información.");
         }
 
