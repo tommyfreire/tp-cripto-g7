@@ -5,6 +5,14 @@ public class LsbSteganography {
      * Si no hay espacio suficiente en los LSB, usa progresivamente el segundo, tercer... hasta octavo bit menos significativo.
      */
     public static byte[] embed(byte[] carrierData, byte[] dataToHide) {
+<<<<<<< HEAD
+=======
+        if (carrierData.length < dataToHide.length * 8) {
+            // Manejar el caso de usar un bit menos significativo mas
+            throw new IllegalArgumentException("No hay suficientes bytes para ocultar la información.");
+        }
+
+>>>>>>> 3f97c936a0ad40ef591baf46e98acea457c46f81
         byte[] modified = carrierData.clone();
         int carrierCapacity = carrierData.length;
         int totalBitsToHide = dataToHide.length * 8;
