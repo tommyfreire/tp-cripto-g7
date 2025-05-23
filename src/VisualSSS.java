@@ -5,9 +5,7 @@ public class VisualSSS {
 
     static int seed = 1200; //TODO: chequear este valor
 
-    static byte[] secretTest = new byte[] {
-            10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120
-    };
+    static byte[] secretTest = new byte[] {10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120};
 
     private static byte[] permuteSecret(byte[] secretTest) {
         PermutationTable tabla = new PermutationTable(seed, secretTest.length);
@@ -46,10 +44,10 @@ public class VisualSSS {
         if (mode.equals("d")) {
             SecretDistributor distributor = new SecretDistributor(permutedSecret, k, n, dir);
             distributor.distribute(seed);
+        } else if (mode.equals("r")) {
+            SecretRecoverer recoverer = new SecretRecoverer(permutedSecret, k, n, dir);
+            recoverer.recover();
         }
-//        } else if (mode.equals("r")) {
-//            SecretRecoverer recoverer = new SecretRecoverer(secret, k, n, dir);
-//            recoverer.recover();
 //        } else {
 //            printUsageAndExit("Error: modo inválido, debe ser -d o -r.");
 //        }
