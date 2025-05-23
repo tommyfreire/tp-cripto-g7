@@ -3,7 +3,27 @@ import java.util.Map;
 
 public class VisualSSS {
 
-    public static void main(String[] args) {
+    static int seed = 1200; //TODO: chequear este valor
+
+    static byte[] secretTest = new byte[] {
+            10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120
+    };
+
+    private static byte[] permuteSecret(byte[] secretTest) {
+        PermutationTable tabla = new PermutationTable(seed, secretTest.length);
+
+        byte[] permutedSecret = new byte[secretTest.length];
+        for (int i = 0; i < secretTest.length; i++) {
+            int original = Byte.toUnsignedInt(secretTest[i]);
+            int randomVal = Byte.toUnsignedInt(tabla.getAt(i));
+            permutedSecret[i] = (byte) ((original + randomVal) % 256);
+        }
+
+        return permutedSecret;
+    }
+
+    public static void main(String[] args) throws Exception {
+
         if (args.length < 4) {
             printUsageAndExit("Error: argumentos insuficientes.");
         }
@@ -21,9 +41,12 @@ public class VisualSSS {
             printUsageAndExit("Error: el archivo secreto debe tener extensión .bmp");
         }
 
-//        if (mode.equals("d")) {
-//            SecretDistributor distributor = new SecretDistributor(secret, k, n, dir);
-//            distributor.distribute();
+        byte[] permutedSecret = permuteSecret(secretTest);
+
+        if (mode.equals("d")) {
+            SecretDistributor distributor = new SecretDistributor(permutedSecret, k, n, dir);
+            distributor.distribute(seed);
+        }
 //        } else if (mode.equals("r")) {
 //            SecretRecoverer recoverer = new SecretRecoverer(secret, k, n, dir);
 //            recoverer.recover();
