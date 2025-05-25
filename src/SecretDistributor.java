@@ -74,7 +74,6 @@ public class SecretDistributor {
             byte[] cuerpoModificado = LsbSteganography.embed(pixelData, valoresAOcultar);
             img.setPixelData(cuerpoModificado);
 
-            //TODO: chequear como se guardan estas cosas
             img.setReservedBytes(6, (short) semilla);
             img.setReservedBytes(8, (short) sombraId);
 

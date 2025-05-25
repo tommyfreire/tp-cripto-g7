@@ -5,9 +5,10 @@ public class SecretRecoverer {
     int k;
     int n;
     String dir;
+    int seed;
     byte[] permutedSecret; // Nombre del archivo secreto
 
-    public SecretRecoverer(byte[] permutedSecret, int k, int n, String dir) {
+    public SecretRecoverer(byte[] permutedSecret, int k, int n, String dir) throws IOException {
         if (permutedSecret.length % k != 0) {
             throw new IllegalArgumentException("La cantidad de bytes del secreto no es divisible por k. " +
                     "No se pueden formar polinomios completos.");
@@ -20,14 +21,21 @@ public class SecretRecoverer {
             throw new IllegalArgumentException("El directorio especificado no existe: " + dir);
         }
         File[] shadowFiles = dirFile.listFiles((d, name) -> name.startsWith("sombra") && name.endsWith(".bmp"));
-        if (shadowFiles.length < k) {
+        if (shadowFiles == null || shadowFiles.length ==0 || shadowFiles.length < k) {
             throw new IllegalArgumentException("Se requieren al menos " + k + " archivos de sombra en el directorio: " + dir);
         }
+
+        BmpImage shadow = new BmpImage(shadowFiles[0].getAbsolutePath());
 
         this.k = k;
         this.n = n;
         this.dir = dir;
+        this.seed = shadow.getReservedBytes(6); // Obtener semilla de los bytes reservados
         this.permutedSecret = permutedSecret;
+    }
+
+    public int getSeed() {
+        return seed;
     }
 
     public byte[] recover() throws IOException {
@@ -67,9 +75,7 @@ public class SecretRecoverer {
             }
         }
 
-        // Inverse permutation (assuming the same permutation as in distribution)
-        byte[] recovered = inversePermute(recoveredPermuted);
-        return recovered;
+        return recoveredPermuted;
     }
 
     // Helper: Lagrange interpolation to recover all coefficients of the polynomial
