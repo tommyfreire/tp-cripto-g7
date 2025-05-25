@@ -11,3 +11,6 @@ target/
 # Sistema operativo
 .DS_Store
 Thumbs.db
+
+# Exclude sombras
+resources/sombra*.bmp
