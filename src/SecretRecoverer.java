@@ -1,28 +1,18 @@
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class SecretRecoverer {
-    int k;
-    int n;
-    String dir;
+    private final int k;
+    private final int n;
+    private final String dir;
     int seed;
-    byte[] permutedSecret; // Nombre del archivo secreto
 
-    public SecretRecoverer(byte[] permutedSecret, int k, int n, String dir) throws IOException {
-        if (permutedSecret.length % k != 0) {
-            throw new IllegalArgumentException("La cantidad de bytes del secreto no es divisible por k. " +
-                    "No se pueden formar polinomios completos.");
-        }
-        if (k < 2 || k > 10) {
-            throw new IllegalArgumentException("El valor de k debe estar entre 2 y 10.");
-        }
-        File dirFile = new File(dir);
-        if (!dirFile.exists() || !dirFile.isDirectory()) {
-            throw new IllegalArgumentException("El directorio especificado no existe: " + dir);
-        }
-        File[] shadowFiles = dirFile.listFiles((d, name) -> name.startsWith("sombra") && name.endsWith(".bmp"));
-        if (shadowFiles == null || shadowFiles.length ==0 || shadowFiles.length < k) {
-            throw new IllegalArgumentException("Se requieren al menos " + k + " archivos de sombra en el directorio: " + dir);
+    public SecretRecoverer(int k, int n, String dir) {
+        if (k < 2 || k > n) {
+            throw new IllegalArgumentException("El valor de k debe estar entre 2 y n.");
         }
 
         BmpImage shadow = new BmpImage(shadowFiles[0].getAbsolutePath());
@@ -39,94 +29,115 @@ public class SecretRecoverer {
     }
 
     public byte[] recover() throws IOException {
-        // Load k shadow images
-        BmpImage[] shadows = new BmpImage[2];
-        int[] shadowIds = new int[2];
-        for (int i = 0; i < 2; i++) {
-            String filePath = String.format("%s/sombra%d.bmp", dir, i + 1);
-            File file = new File(filePath);
-            if (!file.exists()) {
-                throw new IllegalArgumentException("No se encontró la sombra: " + filePath);
-            }
-            shadows[i] = new BmpImage(filePath);
-            // Get shadow id from reserved bytes (as in distributor)
-            shadowIds[i] = shadows[i].getReservedBytes(8); // sombraId
+        // Paso 1: seleccionar k imágenes aleatorias del directorio
+        File carpeta = new File(dir);
+        File[] archivos = carpeta.listFiles((d, name) -> name.startsWith("sombra") && name.endsWith(".bmp"));
+
+        if (archivos == null || archivos.length < k) {
+            throw new IllegalArgumentException("No hay al menos " + k + " sombras en el directorio.");
         }
 
-        int cantidadPolinomios = permutedSecret.length / k;
-        byte[][] extracted = new byte[k][cantidadPolinomios];
+        List<File> lista = new ArrayList<>();
+        Collections.addAll(lista, archivos);
+        Collections.shuffle(lista); // selección aleatoria
+        List<BmpImage> sombras = new ArrayList<>();
+        int[] sombraIds = new int[k];
+
         for (int i = 0; i < k; i++) {
-            extracted[i] = LsbSteganography.extract(shadows[i].getPixelData(), cantidadPolinomios);
+            BmpImage bmp = new BmpImage(lista.get(i).getAbsolutePath());
+            sombras.add(bmp);
+            sombraIds[i] = bmp.getReservedBytes(8); // ID de sombra
         }
 
-        byte[] recoveredPermuted = new byte[permutedSecret.length];
-        for (int poly = 0; poly < cantidadPolinomios; poly++) {
-            // For each polynomial, collect k (x, y) pairs
-            int[] x = new int[k];
+        // Paso 2: determinar cuántos bytes por sombra
+        int q = sombras.get(0).getReservedBytes(34); // cantidad de bytes extraídos por sombra
+
+        // Paso 3: extraer los q valores de cada sombra
+        byte[][] extracted = new byte[k][q];
+        for (int i = 0; i < k; i++) {
+            extracted[i] = LsbSteganography.extract(sombras.get(i).getPixelData(), q);
+        }
+
+        // Paso 4: resolver q sistemas de k ecuaciones para recuperar los coeficientes
+        byte[] recoveredPermuted = new byte[q * k];
+        for (int j = 0; j < q; j++) {
             int[] y = new int[k];
             for (int i = 0; i < k; i++) {
-                x[i] = shadowIds[i];
-                y[i] = Byte.toUnsignedInt(extracted[i][poly]);
+                y[i] = Byte.toUnsignedInt(extracted[i][j]); // Pj(x = sombraId)
             }
-            // Interpolate to get the secret bytes (the coefficients)
-            int[] coeffs = lagrangeInterpolateAllCoefficients(x, y, k, 257);
-            for (int j = 0; j < k; j++) {
-                recoveredPermuted[poly * k + j] = (byte) coeffs[j];
+
+            int[] x = sombraIds;
+
+            // Construir la matriz de Vandermonde y resolver con Gauss
+            int[][] A = new int[k][k];
+            for (int row = 0; row < k; row++) {
+                int xi = x[row];
+                int val = 1;
+                for (int col = 0; col < k; col++) {
+                    A[row][col] = val;
+                    val = (val * xi) % 256;
+                }
+            }
+
+            int[] coef = gaussMod(A, y, 256);
+            for (int i = 0; i < k; i++) {
+                recoveredPermuted[j * k + i] = (byte) coef[i];
             }
         }
 
         return recoveredPermuted;
     }
 
-    // Helper: Lagrange interpolation to recover all coefficients of the polynomial
-    // Returns array of coefficients [a0, a1, ..., ak-1]
-    private int[] lagrangeInterpolateAllCoefficients(int[] x, int[] y, int k, int mod) {
-        // Only the first coefficient (a0) is the secret, but for completeness, recover all
-        // Use Newton's divided differences or Lagrange basis
-        // Here, we recover only a0 (the secret byte)
-        int[] coeffs = new int[k];
-        // Recover a0 (the secret byte)
-        coeffs[0] = lagrangeInterpolate(x, y, 0, mod);
-        // Optionally, recover other coefficients if needed (not required for secret)
-        return coeffs;
-    }
+    // Gauss-Jordan con módulo (resolver Ax = b mod m)
+    private int[] gaussMod(int[][] A, int[] b, int mod) {
+        int n = A.length;
+        int[][] M = new int[n][n + 1];
 
-    // Lagrange interpolation at x=0
-    private int lagrangeInterpolate(int[] x, int[] y, int at, int mod) {
-        int result = 0;
-        for (int i = 0; i < x.length; i++) {
-            int term = y[i];
-            for (int j = 0; j < x.length; j++) {
-                if (i != j) {
-                    term = (int) (((long) term * (at - x[j] + mod) % mod) * modInverse(x[i] - x[j] + mod, mod) % mod);
+        for (int i = 0; i < n; i++) {
+            System.arraycopy(A[i], 0, M[i], 0, n);
+            M[i][n] = b[i];
+        }
+
+        for (int i = 0; i < n; i++) {
+            // Pivote no nulo
+            int inv = modInverse(M[i][i], mod);
+            for (int j = i; j <= n; j++) {
+                M[i][j] = (M[i][j] * inv) % mod;
+            }
+
+            // Eliminar otras filas
+            for (int r = 0; r < n; r++) {
+                if (r != i) {
+                    int factor = M[r][i];
+                    for (int j = i; j <= n; j++) {
+                        M[r][j] = (M[r][j] - factor * M[i][j] % mod + mod) % mod;
+                    }
                 }
             }
-            result = (result + term) % mod;
         }
-        return result;
+
+        int[] x = new int[n];
+        for (int i = 0; i < n; i++) {
+            x[i] = M[i][n];
+        }
+        return x;
     }
 
-    // Modular inverse using extended Euclidean algorithm
     private int modInverse(int a, int mod) {
+        a = ((a % mod) + mod) % mod;
         int m0 = mod, t, q;
         int x0 = 0, x1 = 1;
         if (mod == 1) return 0;
-        a = ((a % mod) + mod) % mod;
         while (a > 1) {
             q = a / mod;
             t = mod;
-            mod = a % mod; a = t;
+            mod = a % mod;
+            a = t;
             t = x0;
             x0 = x1 - q * x0;
             x1 = t;
         }
-        if (x1 < 0) x1 += m0;
-        return x1;
-    }
-
-    // Inverse permutation (assuming identity, override if you have a permutation)
-    private byte[] inversePermute(byte[] arr) {
-        // TODO: Implement if you have a permutation array
-        return arr;
+        return x1 < 0 ? x1 + m0 : x1;
     }
 }
+

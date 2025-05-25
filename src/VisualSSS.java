@@ -3,6 +3,7 @@ import java.util.Map;
 
 public class VisualSSS {
 
+
     private static byte[] permuteSecret(int seed, byte[] secretTest) {
         PermutationTable tabla = new PermutationTable(seed, secretTest.length);
 
@@ -18,7 +19,6 @@ public class VisualSSS {
 
     private static byte[] originalSecret(int seed, byte[] permutedSecret) {
         PermutationTable tabla = new PermutationTable(seed, permutedSecret.length);
-
         byte[] originalSecret = new byte[permutedSecret.length];
         for (int i = 0; i < permutedSecret.length; i++) {
             int permuted = Byte.toUnsignedInt(permutedSecret[i]);
@@ -26,10 +26,8 @@ public class VisualSSS {
             int original = (permuted - randomVal + 256) % 256;
             originalSecret[i] = (byte) original;
         }
-
         return originalSecret;
     }
-
 
 
     public static void main(String[] args) throws Exception {
@@ -67,8 +65,6 @@ public class VisualSSS {
             BmpImage outputImage = new BmpImage(recoverer.getReferenceHeader()); // Assuming method to copy header from original or reference
             outputImage.setPixelData(originalSecret);
             outputImage.save(secret); // 'secret' is the output filename from args
-        }
-
         } else {
              printUsageAndExit("Error: modo inválido, debe ser -d o -r.");
         }
