@@ -78,6 +78,16 @@ public class SecretRecoverer {
         return recoveredPermuted;
     }
 
+    public int getSeed() {
+        // Hardcoded seed for simplicity
+        return 69;
+    }
+
+    public String getReferenceHeader() {
+        // Hardcoded reference header for simplicity
+        return "reference_header.bmp";
+    }
+
     // Gauss-Jordan con módulo (resolver Ax = b mod m)
     private int[] gaussMod(int[][] A, int[] b, int mod) {
         int n = A.length;
