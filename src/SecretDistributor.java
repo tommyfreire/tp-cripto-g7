@@ -26,7 +26,7 @@ public class SecretDistributor {
     }
 
     /**
-     * Evalúa el polinomio p-ésimo (0-based) en x, usando aritmética módulo 257.
+     * Evalúa el polinomio p-ésimo en x, usando aritmética módulo 256.
      */
     public int evaluarPolinomio(int p, int x) {
         if (p < 0 || p >= getCantidadPolinomios()) {
@@ -77,6 +77,7 @@ public class SecretDistributor {
             //TODO: chequear como se guardan estas cosas
             img.setReservedBytes(6, (short) semilla);
             img.setReservedBytes(8, (short) sombraId);
+            img.setReservedBytes(34,(short) cantidadPolinomios);
 
             String nombreSalida = String.format("%s/sombra%d.bmp", dir, sombraId);
             img.save(nombreSalida);

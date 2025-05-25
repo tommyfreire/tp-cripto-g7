@@ -5,8 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2dedd1c1-a826-4a8a-88f2-36391434cdf6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/SecretDistributor.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/LsbSteganography.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/LsbSteganography.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/SecretDistributor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/SecretDistributor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/SecretRecoverer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/SecretRecoverer.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/VisualSSS.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/VisualSSS.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -23,6 +25,9 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 8
@@ -60,7 +65,8 @@
       <workItem from="1746617926799" duration="3192000" />
       <workItem from="1746732417244" duration="1767000" />
       <workItem from="1747681835472" duration="2224000" />
-      <workItem from="1748030939923" duration="4362000" />
+      <workItem from="1748030939923" duration="7682000" />
+      <workItem from="1748199246745" duration="6287000" />
     </task>
     <servers />
   </component>

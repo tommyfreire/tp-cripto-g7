@@ -3,9 +3,7 @@ import java.util.Map;
 
 public class VisualSSS {
 
-    static int seed = 1200; //TODO: chequear este valor
-
-    static byte[] secretTest = new byte[] {10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120};
+    static int seed = 10;
 
     private static byte[] permuteSecret(byte[] secretTest) {
         PermutationTable tabla = new PermutationTable(seed, secretTest.length);
@@ -19,6 +17,7 @@ public class VisualSSS {
 
         return permutedSecret;
     }
+
 
     public static void main(String[] args) throws Exception {
 
@@ -39,18 +38,21 @@ public class VisualSSS {
             printUsageAndExit("Error: el archivo secreto debe tener extensión .bmp");
         }
 
-        byte[] permutedSecret = permuteSecret(secretTest);
-
         if (mode.equals("d")) {
+            byte[] permutedSecret = permuteSecret(secretTest);
             SecretDistributor distributor = new SecretDistributor(permutedSecret, k, n, dir);
             distributor.distribute(seed);
         } else if (mode.equals("r")) {
-            SecretRecoverer recoverer = new SecretRecoverer(permutedSecret, k, n, dir);
+            SecretRecoverer recoverer = new SecretRecoverer(k, n, dir);
             recoverer.recover();
         }
 //        } else {
 //            printUsageAndExit("Error: modo inválido, debe ser -d o -r.");
 //        }
+    }
+
+    public static void testDistributor() {
+
     }
 
     private static Map<String, String> parseArguments(String[] args) {
