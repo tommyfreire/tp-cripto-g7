@@ -29,6 +29,12 @@ public class BmpImage {
         pixelData = Arrays.copyOfRange(fullData, offset, fullData.length);
     }
 
+    public BmpImage(byte[] header, byte[] pixelData) {
+        this.header = header;
+        this.pixelData = pixelData;
+        this.offset = header.length;
+    }
+
     public byte[] getHeader() {
         return header;
     }
