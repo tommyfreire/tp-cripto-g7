@@ -1,4 +1,5 @@
 import static org.junit.Assert.*;
+
 import org.junit.Test;
 import java.util.Random;
 
@@ -10,9 +11,8 @@ public class LsbSteganographyTest {
         int k = 2;
         int n = 2;
 
-        // Polynomial: P(x) = 10 + 20*x
         int p1 = (10 + 20*1) % 256; // 30
-        int p2 = (10 + 20*2) % 256; // 50
+        int p2 = (30 + 40*1) % 256; // 50
 
         // Data to hide in shadow1: [p1, p2]
         byte[] dataToHide = new byte[] {(byte)p1, (byte)p2};

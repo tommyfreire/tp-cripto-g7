@@ -41,7 +41,7 @@ public class SecretDistributor {
             resultado += coef * (int) (Math.pow(x, i));
         }
 
-        return resultado % 256;
+        return resultado % 257;
     }
 
     public void distribute(int semilla) throws Exception {
@@ -74,7 +74,6 @@ public class SecretDistributor {
             byte[] cuerpoModificado = LsbSteganography.embed(pixelData, valoresAOcultar);
             img.setPixelData(cuerpoModificado);
 
-            //TODO: chequear como se guardan estas cosas
             img.setReservedBytes(6, (short) semilla);
             img.setReservedBytes(8, (short) sombraId);
             img.setReservedBytes(34,(short) cantidadPolinomios);

@@ -65,11 +65,11 @@ public class SecretRecoverer {
                 int val = 1;
                 for (int col = 0; col < k; col++) {
                     A[row][col] = val;
-                    val = (val * xi) % 256;
+                    val = (val * xi) % 257;
                 }
             }
 
-            int[] coef = gaussMod(A, y, 256);
+            int[] coef = gaussMod(A, y, 257);
             for (int i = 0; i < k; i++) {
                 recoveredPermuted[j * k + i] = (byte) coef[i];
             }
