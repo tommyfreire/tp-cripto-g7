@@ -1,8 +1,8 @@
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 public class VisualSSS {
-
 
     private static byte[] permuteSecret(int seed, byte[] secretTest) {
         PermutationTable tabla = new PermutationTable(seed, secretTest.length);
@@ -29,45 +29,77 @@ public class VisualSSS {
         return originalSecret;
     }
 
+    public static void testShortSecret() throws Exception {
+
+        byte[] secret = new byte[] {10, 20, 30, 40, 50, 60};
+        int k = 3;
+        int n = 5;
+        int seed = 10;
+        String dir = "resources";
+
+        byte[] permuted = permuteSecret(seed, secret);
+
+        // Distribución
+        SecretDistributor dist = new SecretDistributor(permuted, k, n, dir);
+        dist.distribute(seed);
+
+        // Recuperación
+        SecretRecoverer rec = new SecretRecoverer(k, n, dir);
+        byte[] recoveredPermuted = rec.recover();
+
+        byte[] recovered = originalSecret(seed, recoveredPermuted);
+
+        // Validación
+        System.out.println("Original:   " + Arrays.toString(secret));
+        System.out.println("Recuperado: " + Arrays.toString(recovered));
+        System.out.println(Arrays.equals(secret, recovered)
+                ? "Test exitoso: recuperación correcta"
+                : "Test fallido: datos no coinciden");
+    }
+
+
 
     public static void main(String[] args) throws Exception {
 
-        if (args.length < 4) {
-            printUsageAndExit("Error: argumentos insuficientes.");
-        }
+//        if (args.length < 4) {
+//            printUsageAndExit("Error: argumentos insuficientes.");
+//        }
+//
+//        Map<String, String> params = parseArguments(args);
+//
+//        String mode = params.get("mode");
+//        String secret = params.get("secret");
+//        int k = parseInt(params.get("k"), "k");
+//
+//        int n = params.containsKey("n") ? parseInt(params.get("n"), "n") : -1;
+//        String dir = params.getOrDefault("dir", ".");
+//
+//        if (!secret.endsWith(".bmp")) {
+//            printUsageAndExit("Error: el archivo secreto debe tener extensión .bmp");
+//        }
+//
+//        if (mode.equals("d")) {
+//            int seed = 10;
+//            BmpImage secret_image = new BmpImage(secret);
+//            byte[] originalSecret = secret_image.getPixelData();
+//            byte[] permutedSecret = permuteSecret(seed, originalSecret); //Check seed.
+//            SecretDistributor distributor = new SecretDistributor(permutedSecret, k, n, dir);
+//            distributor.distribute(seed);
+//        } else if (mode.equals("r")) {
+//            SecretRecoverer recoverer = new SecretRecoverer(k, n, dir);
+//            byte[] permutedSecret = recoverer.recover();
+//            byte[] originalSecret = originalSecret(recoverer.getSeed(), permutedSecret);
+//
+//            // Load the reference image to get its header
+//            BmpImage referenceImage = new BmpImage(recoverer.getReferenceHeader());
+//            byte[] header = referenceImage.getHeader();
+//            BmpImage outputImage = new BmpImage(header, originalSecret);
+//            outputImage.save(secret); // 'secret' is the output filename from args
+//        } else {
+//             printUsageAndExit("Error: modo inválido, debe ser -d o -r.");
+//        }
 
-        Map<String, String> params = parseArguments(args);
-
-        String mode = params.get("mode");
-        String secret = params.get("secret");
-        int k = parseInt(params.get("k"), "k");
-
-        int n = params.containsKey("n") ? parseInt(params.get("n"), "n") : -1;
-        String dir = params.getOrDefault("dir", ".");
-
-        if (!secret.endsWith(".bmp")) {
-            printUsageAndExit("Error: el archivo secreto debe tener extensión .bmp");
-        }
-
-        if (mode.equals("d")) {
-            int seed = 10;
-            BmpImage secret_image = new BmpImage(secret);
-            byte[] originalSecret = secret_image.getPixelData();
-            byte[] permutedSecret = permuteSecret(seed, originalSecret); //Check seed.
-            SecretDistributor distributor = new SecretDistributor(permutedSecret, k, n, dir);
-            distributor.distribute(seed);
-        } else if (mode.equals("r")) {
-            SecretRecoverer recoverer = new SecretRecoverer(k, n, dir);
-            byte[] permutedSecret = recoverer.recover();
-            byte[] originalSecret = originalSecret(recoverer.getSeed(), permutedSecret);
-
-            // Save the original secret to the file
-            BmpImage outputImage = new BmpImage(recoverer.getReferenceHeader()); // Assuming method to copy header from original or reference
-            outputImage.setPixelData(originalSecret);
-            outputImage.save(secret); // 'secret' is the output filename from args
-        } else {
-             printUsageAndExit("Error: modo inválido, debe ser -d o -r.");
-        }
+        testShortSecret();
     }
 
     private static Map<String, String> parseArguments(String[] args) {

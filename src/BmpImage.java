@@ -6,9 +6,6 @@ public class BmpImage {
     private byte[] header;
     private byte[] pixelData;
     private int offset;
-    private int width;
-    private int height;
-
     public BmpImage(String path) throws IOException {
         byte[] fullData = Files.readAllBytes(new File(path).toPath());
 
@@ -16,37 +13,28 @@ public class BmpImage {
         offset = ((fullData[13] & 0xFF) << 24) | ((fullData[12] & 0xFF) << 16) |
                 ((fullData[11] & 0xFF) << 8) | (fullData[10] & 0xFF);
 
-        // Leer ancho (bytes 18–21) y alto (bytes 22–25)
-        width = ((fullData[21] & 0xFF) << 24) | ((fullData[20] & 0xFF) << 16) |
-                ((fullData[19] & 0xFF) << 8) | (fullData[18] & 0xFF);
-        height = ((fullData[25] & 0xFF) << 24) | ((fullData[24] & 0xFF) << 16) |
-                ((fullData[23] & 0xFF) << 8) | (fullData[22] & 0xFF);
-
-        // Leer encabezado completo
         header = Arrays.copyOfRange(fullData, 0, offset);
 
-        // Leer datos de píxeles
         pixelData = Arrays.copyOfRange(fullData, offset, fullData.length);
+    }
+
+    public BmpImage(byte[] header, byte[] pixelData) {
+        this.header = header;
+        this.pixelData = pixelData;
+        this.offset = header.length;
+    }
+
+
+    public byte[] getPixelData() {
+        return pixelData;
     }
 
     public byte[] getHeader() {
         return header;
     }
 
-    public byte[] getPixelData() {
-        return pixelData;
-    }
-
     public int getOffset() {
         return offset;
-    }
-
-    public int getWidth() {
-        return width;
-    }
-
-    public int getHeight() {
-        return height;
     }
 
     public void setPixelData(byte[] newPixelData) {

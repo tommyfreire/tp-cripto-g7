@@ -75,17 +75,27 @@ public class SecretRecoverer {
                 int val = 1;
                 for (int col = 0; col < k; col++) {
                     A[row][col] = val;
-                    val = (val * xi) % 256;
+                    val = (val * xi) % 257;
                 }
             }
 
-            int[] coef = gaussMod(A, y, 256);
+            int[] coef = gaussMod(A, y, 257);
             for (int i = 0; i < k; i++) {
                 recoveredPermuted[j * k + i] = (byte) coef[i];
             }
         }
 
         return recoveredPermuted;
+    }
+
+    public int getSeed() {
+        // Hardcoded seed for simplicity
+        return 69;
+    }
+
+    public String getReferenceHeader() {
+        // Hardcoded reference header for simplicity
+        return "reference_header.bmp";
     }
 
     // Gauss-Jordan con módulo (resolver Ax = b mod m)

@@ -41,7 +41,7 @@ public class SecretDistributor {
             resultado += coef * (int) (Math.pow(x, i));
         }
 
-        return resultado % 256;
+        return resultado % 257;
     }
 
     public void distribute(int semilla) throws Exception {

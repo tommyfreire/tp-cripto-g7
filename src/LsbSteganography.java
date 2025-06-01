@@ -10,7 +10,7 @@ public class LsbSteganography {
         int carrierCapacity = carrierData.length;
         int totalBitsToHide = dataToHide.length * 8;
 
-        int bitIndex = 0; // Índice global de bit a ocultar (0 a totalBitsToHide-1)
+        int bitIndex = 0;
 
         while (bitIndex < totalBitsToHide) {
             int bitPosition = bitIndex / carrierCapacity; // Qué bit menos significativo usar (0 = LSB, 1 = 2do bit, ...)
@@ -21,11 +21,10 @@ public class LsbSteganography {
             int carrierIndex = bitIndex % carrierCapacity;
 
             int byteIndex = bitIndex / 8;
-            int bitInByte = 7 - (bitIndex % 8); // de MSB a LSB
+            int bitInByte = 7 - (bitIndex % 8);
 
             int bitToHide = (dataToHide[byteIndex] >> bitInByte) & 1;
 
-            // Limpio el bit que voy a usar y lo seteo con bitToHide
             modified[carrierIndex] &= (byte) ~(1 << bitPosition);
             modified[carrierIndex] |= (byte) (bitToHide << bitPosition);
 
