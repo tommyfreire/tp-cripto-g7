@@ -24,6 +24,41 @@ public class BmpImage {
         this.offset = header.length;
     }
 
+    public static byte[] extractBmpPixelMatrix(String bmpPath) throws IOException {
+        try (FileInputStream fis = new FileInputStream(bmpPath)) {
+            byte[] header = new byte[54];
+            if (fis.read(header) != 54) throw new IOException("Invalid BMP header");
+
+            // Leer offset (bytes 10-13, little endian)
+            int offset = ((header[13] & 0xFF) << 24) | ((header[12] & 0xFF) << 16) |
+                    ((header[11] & 0xFF) << 8) | (header[10] & 0xFF);
+
+            // Leer ancho (bytes 18-21, little endian)
+            int width = ((header[21] & 0xFF) << 24) | ((header[20] & 0xFF) << 16) |
+                    ((header[19] & 0xFF) << 8) | (header[18] & 0xFF);
+
+            // Leer alto (bytes 22-25, little endian)
+            int height = ((header[25] & 0xFF) << 24) | ((header[24] & 0xFF) << 16) |
+                    ((header[23] & 0xFF) << 8) | (header[22] & 0xFF);
+
+            // Calcular padding por fila
+            int rowSize = ((width + 3) / 4) * 4;
+            int padding = rowSize - width;
+
+            // Saltar hasta el offset de los datos de píxeles
+            fis.skip(offset - 54);
+
+            byte[] pixelMatrix = new byte[width * height];
+            byte[] row = new byte[rowSize];
+
+            // BMP almacena las filas de abajo hacia arriba
+            for (int y = height - 1; y >= 0; y--) {
+                if (fis.read(row) != rowSize) throw new IOException("Unexpected EOF in pixel data");
+                System.arraycopy(row, 0, pixelMatrix, y * width, width);
+            }
+            return pixelMatrix;
+        }
+    }
 
     public byte[] getPixelData() {
         return pixelData;
