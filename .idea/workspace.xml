@@ -5,9 +5,23 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d5f75eed-3518-49ae-b696-a288737a0577" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/resources/recuperado.bmp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/resources/sombrasDir/sombra1.bmp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/resources/sombrasDir/sombra2.bmp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/resources/sombrasDir/sombra3.bmp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/resources/sombrasDir/sombra4.bmp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/resources/sombrasDir/sombra5.bmp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TP-Cripto_G7.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/BmpImage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/BmpImage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/Angelinassd.bmp" beforeDir="false" afterPath="$PROJECT_DIR$/resources/sombrasDir/Angelinassd.bmp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/Facundo.bmp" beforeDir="false" afterPath="$PROJECT_DIR$/resources/sombrasDir/Facundo.bmp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/Gracessd.bmp" beforeDir="false" afterPath="$PROJECT_DIR$/resources/sombrasDir/Gracessd.bmp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/James.bmp" beforeDir="false" afterPath="$PROJECT_DIR$/resources/sombrasDir/James.bmp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/Jimssd.bmp" beforeDir="false" afterPath="$PROJECT_DIR$/resources/sombrasDir/Jimssd.bmp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/Lizssd.bmp" beforeDir="false" afterPath="$PROJECT_DIR$/resources/sombrasDir/Lizssd.bmp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/Robertossd.bmp" beforeDir="false" afterPath="$PROJECT_DIR$/resources/sombrasDir/Robertossd.bmp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/Shakirassd.bmp" beforeDir="false" afterPath="$PROJECT_DIR$/resources/sombrasDir/Shakirassd.bmp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/Susanassd.bmp" beforeDir="false" afterPath="$PROJECT_DIR$/resources/sombrasDir/Susanassd.bmp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/Whitneyssd.bmp" beforeDir="false" afterPath="$PROJECT_DIR$/resources/sombrasDir/Whitneyssd.bmp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/LsbSteganography.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/LsbSteganography.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/LsbSteganographyTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/LsbSteganographyTest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/SecretDistributor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/SecretDistributor.java" afterDir="false" />
@@ -50,6 +64,11 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\tommy\cripto\TP-Cripto-G7\resources\sombrasDir" />
+    </key>
+  </component>
   <component name="RunManager">
     <configuration name="VisualSSS" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="VisualSSS" />
@@ -72,26 +91,11 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1748551349434</updated>
-      <workItem from="1748551365959" duration="1205000" />
+      <workItem from="1748551365959" duration="9967000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="java-method">
-          <url>file://$PROJECT_DIR$/src/VisualSSS.java</url>
-          <line>61</line>
-          <properties class="VisualSSS" method="main">
-            <option name="EMULATED" value="true" />
-            <option name="WATCH_EXIT" value="false" />
-          </properties>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
   </component>
 </project>

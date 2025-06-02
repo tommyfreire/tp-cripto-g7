@@ -8,24 +8,16 @@ public class SecretRecoverer {
     private final int k;
     private final int n;
     private final String dir;
-    int seed;
 
     public SecretRecoverer(int k, int n, String dir) {
         if (k < 2 || k > n) {
             throw new IllegalArgumentException("El valor de k debe estar entre 2 y n.");
         }
 
-        BmpImage shadow = new BmpImage(shadowFiles[0].getAbsolutePath());
 
         this.k = k;
         this.n = n;
         this.dir = dir;
-        this.seed = shadow.getReservedBytes(6); // Obtener semilla de los bytes reservados
-        this.permutedSecret = permutedSecret;
-    }
-
-    public int getSeed() {
-        return seed;
     }
 
     public byte[] recover() throws IOException {
@@ -86,11 +78,6 @@ public class SecretRecoverer {
         }
 
         return recoveredPermuted;
-    }
-
-    public int getSeed() {
-        // Hardcoded seed for simplicity
-        return 69;
     }
 
     public String getReferenceHeader() {

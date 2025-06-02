@@ -29,34 +29,62 @@ public class VisualSSS {
         return originalSecret;
     }
 
-    public static void testShortSecret() throws Exception {
+    public static void testBmpSecret() throws Exception {
+        String inputBmpPath = "resources/Alfred.bmp";
+        String outputBmpPath = "resources/recuperado.bmp";
+        String dir = "resources/sombrasDir";
 
-        byte[] secret = new byte[] {10, 20, 30, 40, 50, 60};
         int k = 3;
         int n = 5;
-        int seed = 10;
-        String dir = "resources";
+        int seed = 42;
+
+        BmpImage originalBmp = new BmpImage(inputBmpPath);
+        byte[] secret = originalBmp.getPixelData();
 
         byte[] permuted = permuteSecret(seed, secret);
 
-        // Distribución
-        SecretDistributor dist = new SecretDistributor(permuted, k, n, dir);
-        dist.distribute(seed);
+        SecretDistributor distributor = new SecretDistributor(permuted, k, n, dir);
+        distributor.distribute(seed);
 
-        // Recuperación
-        SecretRecoverer rec = new SecretRecoverer(k, n, dir);
-        byte[] recoveredPermuted = rec.recover();
+        SecretRecoverer recoverer = new SecretRecoverer(k, n, dir);
+        byte[] recoveredPermuted = recoverer.recover();
 
         byte[] recovered = originalSecret(seed, recoveredPermuted);
 
-        // Validación
-        System.out.println("Original:   " + Arrays.toString(secret));
-        System.out.println("Recuperado: " + Arrays.toString(recovered));
-        System.out.println(Arrays.equals(secret, recovered)
-                ? "Test exitoso: recuperación correcta"
-                : "Test fallido: datos no coinciden");
+        System.out.println("Secreto original (bytes): " + secret.length);
+        System.out.println("¿Recuperado igual al original?: " + Arrays.equals(secret, recovered));
+
+        BmpImage resultado = new BmpImage(originalBmp.getHeader(), recovered);
+        resultado.save(outputBmpPath);
+        System.out.println("Imagen recuperada guardada como: " + outputBmpPath);
     }
 
+    public static void compararBMPs(String originalPath, String recuperadoPath) throws Exception {
+        BmpImage original = new BmpImage(originalPath);
+        BmpImage recuperado = new BmpImage(recuperadoPath);
+
+        byte[] a = original.getPixelData();
+        byte[] b = recuperado.getPixelData();
+
+        if (a.length != b.length) {
+            System.out.println("❌ Las imágenes tienen diferente cantidad de bytes: " + a.length + " vs " + b.length);
+            return;
+        }
+
+        int errores = 0;
+        for (int i = 0; i < a.length; i++) {
+            if (a[i] != b[i]) {
+                errores++;
+                System.out.printf("Byte %d: original = %d, recuperado = %d%n", i, Byte.toUnsignedInt(a[i]), Byte.toUnsignedInt(b[i]));
+            }
+        }
+
+        System.out.println("Total de diferencias: " + errores + " de " + a.length + " píxeles (" + (100.0 * errores / a.length) + "%)");
+
+        if (errores == 0) {
+            System.out.println("✅ ¡Las imágenes son idénticas!");
+        }
+    }
 
 
     public static void main(String[] args) throws Exception {
@@ -99,7 +127,8 @@ public class VisualSSS {
 //             printUsageAndExit("Error: modo inválido, debe ser -d o -r.");
 //        }
 
-        testShortSecret();
+        testBmpSecret();
+        compararBMPs("resources/Alfred.bmp", "resources/recuperado.bmp");
     }
 
     private static Map<String, String> parseArguments(String[] args) {
