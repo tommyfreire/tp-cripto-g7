@@ -41,21 +41,26 @@ public class BmpImage {
             int height = ((header[25] & 0xFF) << 24) | ((header[24] & 0xFF) << 16) |
                     ((header[23] & 0xFF) << 8) | (header[22] & 0xFF);
 
-            // Calcular padding por fila
-            int rowSize = ((width + 3) / 4) * 4;
-            int padding = rowSize - width;
+            if (width <= 0 || height <= 0) {
+                throw new IOException("Invalid BMP dimensions");
+            }
 
-            // Saltar hasta el offset de los datos de píxeles
+            // Calcular tamaño por fila incluyendo padding (alineado a múltiplo de 4 bytes)
+            int bytesPerPixel = 1; // para 8 bits por píxel
+            int rowSize = ((width * bytesPerPixel + 3) / 4) * 4;
+
+            // Saltar hasta el inicio de la matriz de píxeles
             fis.skip(offset - 54);
 
             byte[] pixelMatrix = new byte[width * height];
             byte[] row = new byte[rowSize];
 
-            // BMP almacena las filas de abajo hacia arriba
+            // BMP guarda las filas de abajo hacia arriba
             for (int y = height - 1; y >= 0; y--) {
                 if (fis.read(row) != rowSize) throw new IOException("Unexpected EOF in pixel data");
                 System.arraycopy(row, 0, pixelMatrix, y * width, width);
             }
+
             return pixelMatrix;
         }
     }
