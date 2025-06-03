@@ -2,7 +2,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+
 public class VisualSSS {
+
+    private static final int TEST_SEED = 10;
 
     private static byte[] permuteSecret(int seed, byte[] secretTest) {
         PermutationTable tabla = new PermutationTable(seed, secretTest.length);
@@ -32,7 +35,7 @@ public class VisualSSS {
     public static void testBmpSecret() throws Exception {
         String inputBmpPath = "resources/Alfred.bmp";
         String outputBmpPath = "resources/recuperado.bmp";
-        String dir = "resources/sombrasDir";
+        String dir = "resources/sombras";
 
         int k = 3;
         int n = 5;
@@ -85,50 +88,49 @@ public class VisualSSS {
             System.out.println("✅ ¡Las imágenes son idénticas!");
         }
     }
-
-
     public static void main(String[] args) throws Exception {
 
-//        if (args.length < 4) {
-//            printUsageAndExit("Error: argumentos insuficientes.");
-//        }
-//
-//        Map<String, String> params = parseArguments(args);
-//
-//        String mode = params.get("mode");
-//        String secret = params.get("secret");
-//        int k = parseInt(params.get("k"), "k");
-//
-//        int n = params.containsKey("n") ? parseInt(params.get("n"), "n") : -1;
-//        String dir = params.getOrDefault("dir", ".");
-//
-//        if (!secret.endsWith(".bmp")) {
-//            printUsageAndExit("Error: el archivo secreto debe tener extensión .bmp");
-//        }
-//
-//        if (mode.equals("d")) {
-//            int seed = 10;
-//            BmpImage secret_image = new BmpImage(secret);
-//            byte[] originalSecret = secret_image.getPixelData();
-//            byte[] permutedSecret = permuteSecret(seed, originalSecret); //Check seed.
-//            SecretDistributor distributor = new SecretDistributor(permutedSecret, k, n, dir);
-//            distributor.distribute(seed);
-//        } else if (mode.equals("r")) {
-//            SecretRecoverer recoverer = new SecretRecoverer(k, n, dir);
-//            byte[] permutedSecret = recoverer.recover();
-//            byte[] originalSecret = originalSecret(recoverer.getSeed(), permutedSecret);
-//
-//            // Load the reference image to get its header
-//            BmpImage referenceImage = new BmpImage(recoverer.getReferenceHeader());
-//            byte[] header = referenceImage.getHeader();
-//            BmpImage outputImage = new BmpImage(header, originalSecret);
-//            outputImage.save(secret); // 'secret' is the output filename from args
-//        } else {
-//             printUsageAndExit("Error: modo inválido, debe ser -d o -r.");
-//        }
+       if (args.length < 4) {
+           printUsageAndExit("Error: argumentos insuficientes.");
+       }
 
-        testBmpSecret();
-        compararBMPs("resources/Alfred.bmp", "resources/recuperado.bmp");
+       Map<String, String> params = parseArguments(args);
+
+       String mode = params.get("mode");
+       String secret = params.get("secret");
+       int k = parseInt(params.get("k"), "k");
+
+       int n = params.containsKey("n") ? parseInt(params.get("n"), "n") : -1;
+       String dir = params.getOrDefault("dir", "resources/sombras");
+
+       if (!secret.endsWith(".bmp")) {
+           printUsageAndExit("Error: el archivo secreto debe tener extensión .bmp");
+       }
+
+       if (mode.equals("d")) {
+           BmpImage secret_image = new BmpImage(secret);
+           byte[] originalSecret = secret_image.getPixelData();
+           byte[] permutedSecret = permuteSecret(TEST_SEED, originalSecret); //Check seed.
+           SecretDistributor distributor = new SecretDistributor(permutedSecret, k, n, dir);
+           distributor.distribute(TEST_SEED);
+       } else if (mode.equals("r")) {
+           SecretRecoverer recoverer = new SecretRecoverer(k, n, dir);
+           byte[] permutedSecret = recoverer.recover();
+           byte[] originalSecret = originalSecret(TEST_SEED, permutedSecret);
+
+           // Use the header from the first pre-shadow image in resources/preSombras/
+           java.io.File preShadowDir = new java.io.File("resources/preSombras");
+           java.io.File[] preShadowFiles = preShadowDir.listFiles((d, name) -> name.toLowerCase().endsWith(".bmp"));
+           if (preShadowFiles == null || preShadowFiles.length == 0) {
+               printUsageAndExit("No se encontró ninguna pre-sombra en resources/preSombras para obtener el header.");
+           }
+           BmpImage referenceImage = new BmpImage(preShadowFiles[0].getAbsolutePath());
+           byte[] header = referenceImage.getHeader();
+           BmpImage outputImage = new BmpImage(header, originalSecret);
+           outputImage.save(secret); // 'secret' is the output filename from args
+       } else {
+            printUsageAndExit("Error: modo inválido, debe ser -d o -r.");
+       }
     }
 
     private static Map<String, String> parseArguments(String[] args) {
@@ -176,7 +178,7 @@ public class VisualSSS {
     private static void printUsageAndExit(String message) {
         System.err.println(message);
         System.err.println("Uso:");
-        System.err.println("  Distribuir: visualSSS -d -secret <archivo.bmp> -k <num> [-n <num>] [-dir <directorio>]");
+        System.err.println("  Distribuir: visualSSS -d -secret <archivo.bmp> -k <num> [-n <num>] [-dir <directorio>]\n       (usa portadoras de resources/preSombras y guarda sombras en resources/sombras)");
         System.err.println("  Recuperar:  visualSSS -r -secret <archivo.bmp> -k <num> [-n <num>] [-dir <directorio>]");
         System.exit(1);
     }

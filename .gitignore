@@ -13,4 +13,10 @@ target/
 Thumbs.db
 
 # Exclude sombras
-resources/sombra*.bmp
+resources/sombras/sombra*.bmp
+
+# Exclude Recuperado.bmp
+resources/recuperado.bmp
+
+# Eclude bin
+bin/

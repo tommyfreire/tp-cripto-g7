@@ -46,11 +46,11 @@ public class SecretDistributor {
 
     public void distribute(int semilla) throws Exception {
 
-        File carpeta = new File(dir);
+        File carpeta = new File("resources/preSombras");
         File[] archivos = carpeta.listFiles((f, name) -> name.toLowerCase().endsWith(".bmp"));
 
         if (archivos == null || archivos.length < n) {
-            throw new IllegalArgumentException("No hay suficientes imágenes BMP en el directorio: " + dir);
+            throw new IllegalArgumentException("No hay suficientes imágenes BMP en el directorio: resources/preSombras");
         }
 
         List<BmpImage> portadoras = new ArrayList<>();
@@ -67,8 +67,40 @@ public class SecretDistributor {
             byte[] valoresAOcultar = new byte[cantidadPolinomios];
 
             for (int j = 0; j < cantidadPolinomios; j++) {
-                int valor = evaluarPolinomio(j, sombraId);
-                valoresAOcultar[j] = (byte) valor;
+                // Get the coefficients for this polynomial
+                int inicio = j * k;
+                int[] coef = new int[k];
+                for (int ci = 0; ci < k; ci++) {
+                    coef[ci] = Byte.toUnsignedInt(permutedSecret[inicio + ci]);
+                }
+                boolean valid;
+                int[] resultados = new int[n];
+                do {
+                    valid = true;
+                    // Evaluate for all x = 1..n
+                    for (int x = 1; x <= n; x++) {
+                        int resultado = 0;
+                        for (int i = 0; i < k; i++) {
+                            resultado += coef[i] * (int) Math.pow(x, i);
+                        }
+                        resultado = resultado % 257;
+                        resultados[x - 1] = resultado;
+                        if (resultado == 256) {
+                            valid = false;
+                        }
+                    }
+                    if (!valid) {
+                        // Decrement the first nonzero coefficient
+                        for (int i = 0; i < k; i++) {
+                            if (coef[i] != 0) {
+                                coef[i] = coef[i] - 1;
+                                break;
+                            }
+                        }
+                    }
+                } while (!valid);
+                // Use the value for this sombraId
+                valoresAOcultar[j] = (byte) resultados[sombraId - 1];
             }
 
             byte[] cuerpoModificado = LsbSteganography.embed(pixelData, valoresAOcultar);
@@ -78,7 +110,7 @@ public class SecretDistributor {
             img.setReservedBytes(8, (short) sombraId);
             img.setReservedBytes(34,(short) cantidadPolinomios);
 
-            String nombreSalida = String.format("%s/sombra%d.bmp", dir, sombraId);
+            String nombreSalida = String.format("resources/sombras/sombra%d.bmp", sombraId);
             img.save(nombreSalida);
         }
     }
