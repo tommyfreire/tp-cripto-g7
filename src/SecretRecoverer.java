@@ -20,6 +20,18 @@ public class SecretRecoverer {
         this.dir = dir;
     }
 
+    public int getSeed() {
+        // Obtener la semilla de la primera sombra ubicada en los bytes 6 y 7 del header
+        try {
+            File carpeta = new File(dir);
+            File[] archivos = carpeta.listFiles((d, name) -> name.startsWith("sombra") && name.endsWith(".bmp"));
+            BmpImage sombra = new BmpImage(archivos[0].getAbsolutePath());
+            return sombra.getReservedBytes(6);
+        } catch (IOException e) {
+            throw new RuntimeException("Error reading shadow image for seed", e);
+        }
+    }
+
     public byte[] recover() throws IOException {
         // Paso 1: seleccionar k imágenes aleatorias del directorio
         File carpeta = new File(dir);

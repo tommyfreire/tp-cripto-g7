@@ -4,6 +4,7 @@
 # Usage:
 #   ./visualsss.sh -d|-r [options]
 #   ./visualsss.sh clean
+#   ./visualsss.sh clean -b   # Clean Java binaries in bin/
 
 set -e
 
@@ -16,6 +17,7 @@ DEFAULT_OUTPUT="recuperado.bmp"
 function usage() {
   echo "Usage: $0 -d|-r [options]"
   echo "       $0 clean"
+  echo "       $0 clean -b   # Clean Java binaries in bin/"
   echo "Options:"
   echo "  -secret <file>   Secret BMP file (input for -d, output for -r)"
   echo "  -k <num>         Threshold k (required)"
@@ -57,6 +59,11 @@ function clean_files() {
 }
 
 if [ "$1" == "clean" ]; then
+  if [ "$2" == "-b" ]; then
+    echo "Cleaning Java binaries in bin/ ..."
+    rm -f $BIN_DIR/*.class
+    echo "Java binaries cleaned."
+  fi
   clean_files
   exit 0
 fi

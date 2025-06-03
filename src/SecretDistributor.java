@@ -7,9 +7,8 @@ public class SecretDistributor {
     private final int k;
     private final int n;
 
-    private final String dir;
 
-    public SecretDistributor(byte[] permutedSecret, int k, int n, String dir) {
+    public SecretDistributor(byte[] permutedSecret, int k, int n) {
         if (permutedSecret.length % k != 0) {
             throw new IllegalArgumentException("La cantidad de bytes del secreto no es divisible por k. " +
                     "No se pueden formar polinomios completos.");
@@ -18,7 +17,6 @@ public class SecretDistributor {
         this.permutedSecret = permutedSecret;
         this.k = k;
         this.n = n;
-        this.dir = dir;
     }
 
     public int getCantidadPolinomios() {
@@ -44,7 +42,7 @@ public class SecretDistributor {
         return resultado % 257;
     }
 
-    public void distribute(int semilla) throws Exception {
+    public void distribute(int seed) throws Exception {
 
         File carpeta = new File("resources/preSombras");
         File[] archivos = carpeta.listFiles((f, name) -> name.toLowerCase().endsWith(".bmp"));
@@ -106,7 +104,7 @@ public class SecretDistributor {
             byte[] cuerpoModificado = LsbSteganography.embed(pixelData, valoresAOcultar);
             img.setPixelData(cuerpoModificado);
 
-            img.setReservedBytes(6, (short) semilla);
+            img.setReservedBytes(6, (short) seed);
             img.setReservedBytes(8, (short) sombraId);
             img.setReservedBytes(34,(short) cantidadPolinomios);
 

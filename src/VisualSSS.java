@@ -5,8 +5,6 @@ import java.util.Map;
 
 public class VisualSSS {
 
-    private static final int TEST_SEED = 10;
-
     private static byte[] permuteSecret(int seed, byte[] secretTest) {
         PermutationTable tabla = new PermutationTable(seed, secretTest.length);
 
@@ -18,6 +16,10 @@ public class VisualSSS {
         }
 
         return permutedSecret;
+    }
+
+    private static int generateSeed() {
+        return (int) (Math.random() * 65535);
     }
 
     private static byte[] originalSecret(int seed, byte[] permutedSecret) {
@@ -46,7 +48,7 @@ public class VisualSSS {
 
         byte[] permuted = permuteSecret(seed, secret);
 
-        SecretDistributor distributor = new SecretDistributor(permuted, k, n, dir);
+        SecretDistributor distributor = new SecretDistributor(permuted, k, n);
         distributor.distribute(seed);
 
         SecretRecoverer recoverer = new SecretRecoverer(k, n, dir);
@@ -108,15 +110,17 @@ public class VisualSSS {
        }
 
        if (mode.equals("d")) {
-           BmpImage secret_image = new BmpImage(secret);
+            int seed = generateSeed();
+            BmpImage secret_image = new BmpImage(secret);
            byte[] originalSecret = secret_image.getPixelData();
-           byte[] permutedSecret = permuteSecret(TEST_SEED, originalSecret); //Check seed.
-           SecretDistributor distributor = new SecretDistributor(permutedSecret, k, n, dir);
-           distributor.distribute(TEST_SEED);
+           byte[] permutedSecret = permuteSecret(seed, originalSecret); //Check seed.
+           SecretDistributor distributor = new SecretDistributor(permutedSecret, k, n);
+           distributor.distribute(seed);
        } else if (mode.equals("r")) {
            SecretRecoverer recoverer = new SecretRecoverer(k, n, dir);
            byte[] permutedSecret = recoverer.recover();
-           byte[] originalSecret = originalSecret(TEST_SEED, permutedSecret);
+           int seed = recoverer.getSeed();
+           byte[] originalSecret = originalSecret(seed, permutedSecret);
 
            // Use the header from the first pre-shadow image in resources/preSombras/
            java.io.File preShadowDir = new java.io.File("resources/preSombras");
