@@ -8,30 +8,48 @@ This project implements a visual secret sharing scheme for BMP images, combining
 - **Secret Recovery:** Reconstruct the original BMP image from any `k` shadow images.
 - **Steganography:** Uses LSB steganography to hide share data within carrier images.
 - **Shamir's Secret Sharing:** Ensures information-theoretic security; fewer than `k` shares reveal nothing about the secret.
+- **Automatic 256 Avoidance:** The algorithm ensures no shadow pixel value is ever 256, as per the referenced paper, by dynamically adjusting coefficients.
+- **Easy Scripted Usage:** Includes a script for easy running, cleaning, and compilation.
+
+## Directory Structure (Updated)
+
+- **Carrier images for distribution:** `resources/preSombras/`
+- **Generated shadow images:** `resources/sombras/`
+- **Default recovery location:** `resources/sombras/`
 
 ## How It Works
 
 1. **Distribute Mode (`-d`):**
    - The secret image is permuted for extra security.
    - The permuted data is split using Shamir's Secret Sharing.
-   - Each share is embedded into a carrier BMP image using LSB steganography.
-   - Shadow images are saved with metadata in their headers.
+   - Each share is embedded into a carrier BMP image from `resources/preSombras/` using LSB steganography.
+   - Shadow images are saved in `resources/sombras/` with metadata in their headers.
+   - If any polynomial evaluation yields 256, the first nonzero coefficient is decremented and the process is retried until all values are in [0, 255].
 
 2. **Recover Mode (`-r`):**
-   - `k` shadow images are selected.
+   - `k` shadow images are selected from `resources/sombras/`.
    - The embedded data is extracted and the original permuted secret is reconstructed using modular linear algebra.
    - The permutation is reversed to recover the original image.
+   - The BMP header for the output is taken from the first available pre-shadow image in `resources/preSombras/`.
 
 ## Usage
 
-### Command Line
+### Using the Script (Recommended)
+
+A script `visualsss.sh` is provided for easy running, cleaning, and compilation.
 
 ```sh
-# Distribute secret
-java VisualSSS -d -secret <secret.bmp> -k <threshold> -n <num_shadows> -dir <carrier_images_dir>
+# Distribute secret (uses carriers from resources/preSombras/)
+./visualsss.sh -d -secret resources/Alfred.bmp -k 3 -n 5
 
-# Recover secret
-java VisualSSS -r -secret <output.bmp> -k <threshold> -n <num_shadows> -dir <shadows_dir>
+# Recover secret (uses shadows from resources/sombras/)
+./visualsss.sh -r -secret resources/recuperado.bmp -k 3 -n 5
+
+# Clean generated shadows and output files
+./visualsss.sh clean
+
+# Clean Java binaries in bin/
+./visualsss.sh clean -b
 ```
 
 - `-d`: Distribute mode (split secret)
@@ -40,102 +58,90 @@ java VisualSSS -r -secret <output.bmp> -k <threshold> -n <num_shadows> -dir <sha
 - `-k <num>`: Minimum number of shares required to reconstruct the secret
 - `-n <num>`: Total number of shares to create (optional for recovery, required for distribution)
 - `-dir <directory>`: Directory containing carrier BMP images (for distribute) or shadow images (for recover)
+However, the script will prompt for missing parameters and always compile the Java sources before running.
+You do not need to specify carrier or shadow directories unless using custom locations.
 
-### Example
+### Manual Command Line
 
 ```sh
-# Distribute a secret image into 5 shares, requiring any 3 to recover
-java VisualSSS -d -secret secret.bmp -k 3 -n 5 -dir resources/
+# Distribute secret
+java -cp bin VisualSSS -d -secret resources/Alfred.bmp -k 3 -n 5 -dir resources/sombras
 
-# Recover the secret image from any 3 shadow images
-java VisualSSS -r -secret recovered.bmp -k 3 -n 5 -dir shadows/
+# Recover secret
+java -cp bin VisualSSS -r -secret resources/recuperado.bmp -k 3 -n 5 -dir resources/sombras
 ```
 
 ## Running and Testing the Project
 
-### 1. Compile the Project
-
-Open a terminal in your project root (where `src/` is located) and run:
+### 1. Compile the Project (if not using the script)
 
 ```sh
 javac -d bin src/*.java
 ```
 
-- This compiles all Java files in `src/` and puts the `.class` files in a new `bin/` directory.
+### 2. Prepare Images
 
-### 2. Prepare Test Images
-
-- **Secret Image:**  
-  You need a BMP image (e.g., `secret.bmp`) that you want to split.
-- **Carrier Images:**  
-  You need at least `n` BMP images (e.g., `carrier1.bmp`, `carrier2.bmp`, ...) in a directory (e.g., `resources/`).  
-  These should be the same size as the secret image.
+- **Secret Image:**  Place your secret BMP image (e.g., `Alfred.bmp`) in `resources/`.
+- **Carrier Images:**  Place at least `n` BMP images in `resources/preSombras/` (must be the same size as the secret image).
 
 ### 3. Distribute the Secret
 
-Suppose you want to split `secret.bmp` into 5 shares, with a threshold of 3, using carrier images in `resources/`:
+```sh
+./visualsss.sh -d -secret resources/Alfred.bmp -k 3 -n 5
+```
+- This will create `sombra1.bmp`, `sombra2.bmp`, ..., `sombra5.bmp` in `resources/sombras/`.
+
+### 4. Recover the Secret
 
 ```sh
-java -cp bin VisualSSS -d -secret secret.bmp -k 3 -n 5 -dir resources/
+./visualsss.sh -r -secret resources/recuperado.bmp -k 3 -n 5
 ```
+- This will reconstruct the secret and save it as `resources/recuperado.bmp`.
 
-- This will create `sombra1.bmp`, `sombra2.bmp`, ..., `sombra5.bmp` in the `resources/` directory.
-
-### 4. Test Recovery
-
-To recover the secret from any 3 of the shadow images (e.g., after copying 3 of them to a directory called `shadows/`):
+### 5. Clean Up
 
 ```sh
-java -cp bin VisualSSS -r -secret recovered.bmp -k 3 -n 5 -dir shadows/
+./visualsss.sh clean      # Remove generated shadows and output
+./visualsss.sh clean -b   # Remove generated shadows and output and also Java binaries in bin/
 ```
-
-- This will reconstruct the secret and save it as `recovered.bmp`.
-
-### 5. Check the Result
-
-- Open `recovered.bmp` with any image viewer.
-- It should look identical to your original `secret.bmp`.
 
 ### 6. Troubleshooting
 
-- **Class Not Found:**  
-  Make sure you use `-cp bin` and that `bin/VisualSSS.class` exists.
-- **BMP Format:**  
-  Only 24-bit BMP images are supported.
-- **Image Size:**  
-  Carrier images must be at least as large as the secret image.
-- **Divisibility:**  
-  The number of bytes in the secret image must be divisible by `k`.
+- **Class Not Found:**  The script compiles automatically, but if running manually, ensure you use `-cp bin` and that `bin/VisualSSS.class` exists.
+- **Image Size:**  Carrier images must be at least as large as the secret image.
+- **Divisibility:**  The number of bytes in the secret image must be divisible by `k`.
+- **No 256 Values:**  The algorithm ensures no shadow pixel value is ever 256.
 
 ### 7. Example Directory Structure
 
 ```
 tp-cripto-g7/
+  visualsss.sh
   src/
     *.java
   bin/
     *.class
-  secret.bmp
-  carriers/
-    carrier1.bmp
-    carrier2.bmp
-    carrier3.bmp
-    carrier4.bmp
-    carrier5.bmp
-  shadows/
-    sombra1.bmp
-    sombra2.bmp
-    sombra3.bmp
+  resources/
+    Alfred.bmp
+    preSombras/
+      carrier1.bmp
+      carrier2.bmp
+      ...
+    sombras/
+      sombra1.bmp
+      sombra2.bmp
+      ...
 ```
 
 ## File Structure
 
 - `src/VisualSSS.java`: Main entry point, argument parsing, orchestrates distribution and recovery.
-- `src/SecretDistributor.java`: Handles splitting and embedding the secret.
+- `src/SecretDistributor.java`: Handles splitting and embedding the secret, and ensures no 256 values in shadows.
 - `src/SecretRecoverer.java`: Handles extracting and reconstructing the secret.
 - `src/LsbSteganography.java`: LSB steganography utilities.
 - `src/BmpImage.java`: BMP image reading/writing utilities.
 - `src/PermutationTable.java`: Pseudo-random permutation for extra security.
+- `visualsss.sh`: Script for easy running, cleaning, and compilation.
 
 ## Requirements
 
@@ -147,7 +153,9 @@ tp-cripto-g7/
 - The number of bytes in the secret image must be divisible by `k`.
 - The carrier images must be at least as large as the secret image.
 - The program stores metadata (seed, shadow ID, etc.) in reserved bytes of the BMP header.
+- The script automates compilation and directory management for you.
+- The algorithm dynamically adjusts coefficients to avoid 256 in shadow pixels, as per the referenced paper.
 
 **Authors:**  
-Grupo 7:
+Grupo 7:  
 Braun, Santos; Freire, Tomás; Vella, Mauro
