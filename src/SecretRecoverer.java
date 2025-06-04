@@ -70,7 +70,10 @@ public class SecretRecoverer {
         // }
 
         // Paso 2: determinar cuántos bytes por sombra
-        int q = sombras.get(0).getReservedBytes(34); // cantidad de bytes extraídos por sombra
+        int q = sombras.get(0).getIntFromHeader(34); // cantidad de bytes extraídos por sombra (4 bytes)
+        if (q <= 0) {
+            throw new IllegalArgumentException("Valor de q inválido: " + q);
+        }
 
         // Paso 3: extraer los q valores de cada sombra
         byte[][] extracted = new byte[k][q];

@@ -102,4 +102,11 @@ public class BmpImage {
     public short getReservedBytes(int position) {
         return (short) (((header[position + 1] & 0xFF) << 8) | (header[position] & 0xFF));
     }
+
+    public int getIntFromHeader(int position) {
+        return ((header[position + 3] & 0xFF) << 24) |
+               ((header[position + 2] & 0xFF) << 16) |
+               ((header[position + 1] & 0xFF) << 8) |
+               (header[position] & 0xFF);
+    }
 }
