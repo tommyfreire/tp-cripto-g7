@@ -6,17 +6,22 @@ import java.util.List;
 
 public class SecretRecoverer {
     private final int k;
-    private final int n;
     private final String dir;
 
     public SecretRecoverer(int k, int n, String dir) {
-        if (k < 2 || k > n) {
-            throw new IllegalArgumentException("El valor de k debe estar entre 2 y n.");
+        if (k < 2 || k > 10) {
+            throw new IllegalArgumentException("El valor de k debe estar entre 2 y 10.");
         }
 
+        if (k > n) {
+            throw new IllegalArgumentException("El valor de k debe ser menor o igual a n.");
+        }
+        
+        if (n < 2) {
+            throw new IllegalArgumentException("El valor de n debe ser mayor o igual a 2.");
+        }
 
         this.k = k;
-        this.n = n;
         this.dir = dir;
     }
 
@@ -28,7 +33,7 @@ public class SecretRecoverer {
             BmpImage sombra = new BmpImage(archivos[0].getAbsolutePath());
             return sombra.getReservedBytes(6);
         } catch (IOException e) {
-            throw new RuntimeException("Error reading shadow image for seed", e);
+            throw new RuntimeException("Error leyendo la primera sombra para obtener la semilla", e);
         }
     }
 
@@ -52,6 +57,17 @@ public class SecretRecoverer {
             sombras.add(bmp);
             sombraIds[i] = bmp.getReservedBytes(8); // ID de sombra
         }
+
+        // For (8, n) scheme, check all shadow images have the same pixel data length
+        // TODO: Creo q no funciona 
+        // if (k == 8) {
+        //     int refLength = sombras.get(0).getPixelData().length;
+        //     for (int i = 1; i < sombras.size(); i++) {
+        //         if (sombras.get(i).getPixelData().length != refLength) {
+        //             throw new IllegalArgumentException("Para k=8, todas las imágenes portadoras deben tener el mismo tamaño (en píxeles) entre sí.");
+        //         }
+        //     }
+        // }
 
         // Paso 2: determinar cuántos bytes por sombra
         int q = sombras.get(0).getReservedBytes(34); // cantidad de bytes extraídos por sombra

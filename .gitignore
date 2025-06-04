@@ -17,6 +17,7 @@ resources/sombras/sombra*.bmp
 
 # Exclude Recuperado.bmp
 resources/recuperado.bmp
+resources/recovered/
 
 # Eclude bin
 bin/

@@ -14,6 +14,18 @@ public class SecretDistributor {
                     "No se pueden formar polinomios completos.");
         }
 
+        if (k < 2 || k > 10) {
+            throw new IllegalArgumentException("El valor de k debe estar entre 2 y 10.");
+        }
+
+        if (n < 2) {
+            throw new IllegalArgumentException("El valor de n debe ser al menos 2.");
+        }
+
+        if (k > n) {
+            throw new IllegalArgumentException("El valor de k debe ser al menos n.");
+        }
+
         this.permutedSecret = permutedSecret;
         this.k = k;
         this.n = n;
@@ -55,6 +67,17 @@ public class SecretDistributor {
         for (int i = 0; i < n; i++) {
             portadoras.add(new BmpImage(archivos[i].getAbsolutePath()));
         }
+
+        // Check carrier images have the same size as the secret image if k == 8
+        // TODO: En el caso de que el valor de k sea distinto de 8, queda a criterio del grupo definir (justificadamente) el tamaño de las imágenes portadoras y el método de ocultamiento.
+        // if (k == 8) {
+        //     for (BmpImage portadora : portadoras) {
+        //         if (portadora.getPixelData().length != permutedSecret.length) {
+        //             throw new IllegalArgumentException("Para k=8, todas las imágenes portadoras deben tener el mismo tamaño (en píxeles) que la imagen secreta.");
+        //         }
+        //     }
+        // }
+        // Para k != 8, solo se requiere que la imagen portadora sea lo suficientemente grande para ocultar los datos necesarios usando LSB replacement.
 
         int cantidadPolinomios = getCantidadPolinomios();
 

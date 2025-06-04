@@ -6,6 +6,7 @@ public class BmpImage {
     private byte[] header;
     private byte[] pixelData;
     private int offset;
+
     public BmpImage(String path) throws IOException {
         byte[] fullData = Files.readAllBytes(new File(path).toPath());
 
@@ -14,6 +15,11 @@ public class BmpImage {
                 ((fullData[11] & 0xFF) << 8) | (fullData[10] & 0xFF);
 
         header = Arrays.copyOfRange(fullData, 0, offset);
+
+        // Check if the image is RGB or grayscale: byte 28 of the header should be 8
+        if (header[28] != 8) {
+            throw new IOException("The image is not grayscale");
+        }
 
         pixelData = Arrays.copyOfRange(fullData, offset, fullData.length);
     }

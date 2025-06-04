@@ -84,12 +84,17 @@ javac -d bin src/*.java
 - **Secret Image:**  Place your secret BMP image (e.g., `Alfred.bmp`) in `resources/`.
 - **Carrier Images:**  Place at least `n` BMP images in `resources/preSombras/` (must be the same size as the secret image).
 
+#### Requirements for carrier images
+- **When k = 8:** All carrier images must have the same size (width and height, however we are actually using the same amount of pixels) as the secret image. If this condition is not met, the program will show an error and not continue. During recovery, all selected shadow images must also have the same size; otherwise, the program will show an error and abort.
+- **When k ≠ 8:** Carrier images can have any size, but must be large enough to hide all the data needed using LSB replacement. This means the number of pixels must be at least equal to the amount of data to hide.
+
 ### 3. Distribute the Secret
 
 ```sh
 ./visualsss.sh -d -secret resources/Alfred.bmp -k 3 -n 5
 ```
 - This will create `sombra1.bmp`, `sombra2.bmp`, ..., `sombra5.bmp` in `resources/sombras/`.
+- The hiding method used is LSB replacement, starting from the first pixel of the carrier image.
 
 ### 4. Recover the Secret
 
@@ -97,6 +102,7 @@ javac -d bin src/*.java
 ./visualsss.sh -r -secret resources/recuperado.bmp -k 3 -n 5
 ```
 - This will reconstruct the secret and save it as `resources/recuperado.bmp`.
+- **Note:** For (8, n) schemes, all selected shadow images must have the same size (number of pixels). If not, the program will show an error and abort.
 
 ### 5. Clean Up
 

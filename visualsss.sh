@@ -12,57 +12,57 @@ BIN_DIR="bin"
 MAIN_CLASS="VisualSSS"
 DEFAULT_RESOURCES="resources"
 DEFAULT_SHADOWS="resources/sombras"
-DEFAULT_OUTPUT="recuperado.bmp"
+DEFAULT_OUTPUT="resources/recovered/recuperado.bmp"
 
 function usage() {
-  echo "Usage: $0 -d|-r [options]"
+  echo "Uso: $0 -d|-r [opciones]"
   echo "       $0 clean"
   echo "       $0 clean -b   # Clean Java binaries in bin/"
-  echo "Options:"
-  echo "  -secret <file>   Secret BMP file (input for -d, output for -r)"
-  echo "  -k <num>         Threshold k (required)"
-  echo "  -n <num>         Number of shares n (required for -d, optional for -r)"
-  echo "  -dir <dir>       Directory for carriers (-d) or shadows (-r) [default: $DEFAULT_RESOURCES or $DEFAULT_SHADOWS]"
-  echo "  -h               Show this help message"
+  echo "Opciones:"
+  echo "  -secret <file>   Archivo BMP secreto (entrada para -d, salida para -r)"
+  echo "  -k <num>         Umbral k (requerido)"
+  echo "  -n <num>         Número de particiones n (requerido para -d, opcional para -r)"
+  echo "  -dir <dir>       Directorio para portadoras (-d) o sombras (-r) [predeterminado: $DEFAULT_RESOURCES o $DEFAULT_SHADOWS]"
+  echo "  -h               Mostrar este mensaje de ayuda"
   exit 1
 }
 
 function clean_files() {
-  echo "Cleaning generated shadow and output files..."
+  echo "Eliminando archivos de sombras y de salida generados..."
   for dir in "$DEFAULT_RESOURCES" "$DEFAULT_SHADOWS"; do
     if [ -d "$dir" ]; then
       found=$(ls "$dir"/sombra*.bmp 2>/dev/null | wc -l)
       if [ "$found" -gt 0 ]; then
-        echo "Found shadow files in $dir:"
+        echo "Archivos de sombras encontrados en $dir:"
         ls "$dir"/sombra*.bmp
-        read -p "Delete these files? [y/N] " yn
+        read -p "¿Eliminar estos archivos? [y/N] " yn
         if [[ "$yn" =~ ^[Yy]$ ]]; then
           rm "$dir"/sombra*.bmp
-          echo "Deleted."
+          echo "Eliminadas."
         else
-          echo "Skipped."
+          echo "Omitidas."
         fi
       fi
     fi
   done
   if [ -f "$DEFAULT_RESOURCES/$DEFAULT_OUTPUT" ]; then
-    echo "Found output file: $DEFAULT_RESOURCES/$DEFAULT_OUTPUT"
-    read -p "Delete this file? [y/N] " yn
+    echo "Archivo de salida encontrado: $DEFAULT_RESOURCES/$DEFAULT_OUTPUT"
+    read -p "¿Eliminar este archivo? [y/N] " yn
     if [[ "$yn" =~ ^[Yy]$ ]]; then
       rm "$DEFAULT_RESOURCES/$DEFAULT_OUTPUT"
-      echo "Deleted."
+      echo "Eliminado."
     else
-      echo "Skipped."
+      echo "Omitido."
     fi
   fi
-  echo "Cleanup done."
+  echo "Limpieza completada."
 }
 
 if [ "$1" == "clean" ]; then
   if [ "$2" == "-b" ]; then
-    echo "Cleaning Java binaries in bin/ ..."
+    echo "Eliminando archivos binarios de Java en bin/ ..."
     rm -f $BIN_DIR/*.class
-    echo "Java binaries cleaned."
+    echo "Archivos binarios de Java eliminados."
   fi
   clean_files
   exit 0
@@ -108,30 +108,30 @@ while [[ $# -gt 0 ]]; do
       usage
       ;;
     *)
-      echo "Unknown option: $1"
+      echo "Opción desconocida: $1"
       usage
       ;;
   esac
 done
 
 if [ -z "$MODE" ]; then
-  echo "Error: Must specify -d (distribute) or -r (recover) mode."
+  echo "Error: Debe especificar el modo -d (distribuir) o -r (recuperar)."
   usage
 fi
 
 if [ -z "$K" ]; then
-  read -p "Enter threshold k: " K
+  read -p "Ingrese el umbral k: " K
 fi
 
 if [ "$MODE" == "-d" ] && [ -z "$N" ]; then
-  read -p "Enter number of shares n: " N
+  read -p "Ingrese el número de shares n: " N
 fi
 
 if [ -z "$SECRET" ]; then
   if [ "$MODE" == "-d" ]; then
-    read -p "Enter path to secret BMP file: " SECRET
+    read -p "Ingrese la dirección al archivo BMP secreto: " SECRET
   else
-    read -p "Enter output BMP file name (default: $DEFAULT_OUTPUT): " SECRET
+    read -p "Ingrese el nombre del archivo BMP de salida (predeterminado: $DEFAULT_OUTPUT): " SECRET
     SECRET=${SECRET:-$DEFAULT_OUTPUT}
   fi
 fi
@@ -145,7 +145,7 @@ if [ -z "$DIR" ]; then
 fi
 
 if [ "$1" != "clean" ]; then
-  echo "Compiling Java sources..."
+  echo "Compilando archivos fuente de Java..."
   javac -d $BIN_DIR src/VisualSSS.java src/SecretDistributor.java src/SecretRecoverer.java src/LsbSteganography.java src/BmpImage.java src/PermutationTable.java
 fi
 
@@ -167,4 +167,4 @@ echo "Running: $JAVA_CMD"
 $JAVA_CMD
 
 echo "Done."
-echo "You can run '$0 clean' to remove generated shadow and output files." 
+echo "Podes correr '$0 clean' para eliminar los archivos de sombras y el archivo recuperado." 
