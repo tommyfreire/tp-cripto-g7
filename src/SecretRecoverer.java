@@ -1,5 +1,7 @@
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -58,19 +60,8 @@ public class SecretRecoverer {
             sombraIds[i] = bmp.getReservedBytes(8); // ID de sombra
         }
 
-        // For (8, n) scheme, check all shadow images have the same pixel data length
-        // TODO: Creo q no funciona 
-        // if (k == 8) {
-        //     int refLength = sombras.get(0).getPixelData().length;
-        //     for (int i = 1; i < sombras.size(); i++) {
-        //         if (sombras.get(i).getPixelData().length != refLength) {
-        //             throw new IllegalArgumentException("Para k=8, todas las imágenes portadoras deben tener el mismo tamaño (en píxeles) entre sí.");
-        //         }
-        //     }
-        // }
-
         // Paso 2: determinar cuántos bytes por sombra
-        int q = sombras.get(0).getIntFromHeader(34); // cantidad de bytes extraídos por sombra (4 bytes)
+        int q = sombras.get(0).getIntFromHeader(34); // cantidad de bytes a extraer por sombra
         if (q <= 0) {
             throw new IllegalArgumentException("Valor de q inválido: " + q);
         }
@@ -83,6 +74,8 @@ public class SecretRecoverer {
 
         // Paso 4: resolver q sistemas de k ecuaciones para recuperar los coeficientes
         byte[] recoveredPermuted = new byte[q * k];
+        byte[] expectedPermuted = Files.readAllBytes(Paths.get("resources/permutado_secreto.bin"));
+
         for (int j = 0; j < q; j++) {
             int[] y = new int[k];
             for (int i = 0; i < k; i++) {
@@ -104,8 +97,18 @@ public class SecretRecoverer {
 
             int[] coef = gaussMod(A, y, 257);
             for (int i = 0; i < k; i++) {
-                recoveredPermuted[j * k + i] = (byte) coef[i];
+                int index = j * k + i;
+                recoveredPermuted[index] = (byte) coef[i];
+
+                int expected = Byte.toUnsignedInt(expectedPermuted[index]);
+                int actual = Byte.toUnsignedInt(recoveredPermuted[index]);
+                if (expected != actual) {
+                    System.out.printf("❌ Byte %d: esperado = %d, recuperado = %d (polinomio %d, coeficiente %d)%n",
+                            index, expected, actual, j, i);
+                }
+
             }
+
         }
 
         return recoveredPermuted;

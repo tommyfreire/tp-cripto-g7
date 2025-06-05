@@ -35,24 +35,6 @@ public class SecretDistributor {
         return permutedSecret.length / k;
     }
 
-    /**
-     * Evalúa el polinomio p-ésimo en x, usando aritmética módulo 256.
-     */
-    public int evaluarPolinomio(int p, int x) {
-        if (p < 0 || p >= getCantidadPolinomios()) {
-            throw new IllegalArgumentException("Índice de polinomio inválido: " + p);
-        }
-
-        int resultado = 0;
-        int inicio = p * k;
-        
-        for (int i = 0; i < k; i++) {
-            int coef = Byte.toUnsignedInt(permutedSecret[inicio + i]);
-            resultado += coef * (int) (Math.pow(x, i));
-        }
-
-        return resultado % 257;
-    }
 
     public void distribute(int seed) throws Exception {
 
@@ -67,17 +49,6 @@ public class SecretDistributor {
         for (int i = 0; i < n; i++) {
             portadoras.add(new BmpImage(archivos[i].getAbsolutePath()));
         }
-
-        // Check carrier images have the same size as the secret image if k == 8
-        // TODO: En el caso de que el valor de k sea distinto de 8, queda a criterio del grupo definir (justificadamente) el tamaño de las imágenes portadoras y el método de ocultamiento.
-        // if (k == 8) {
-        //     for (BmpImage portadora : portadoras) {
-        //         if (portadora.getPixelData().length != permutedSecret.length) {
-        //             throw new IllegalArgumentException("Para k=8, todas las imágenes portadoras deben tener el mismo tamaño (en píxeles) que la imagen secreta.");
-        //         }
-        //     }
-        // }
-        // Para k != 8, solo se requiere que la imagen portadora sea lo suficientemente grande para ocultar los datos necesarios usando LSB replacement.
 
         int cantidadPolinomios = getCantidadPolinomios();
 
@@ -132,6 +103,7 @@ public class SecretDistributor {
             img.setReservedBytes(34,(short) cantidadPolinomios);
 
             String nombreSalida = String.format("resources/sombras/sombra%d.bmp", sombraId);
+            System.out.println("Guardando sombra " + sombraId + " en: " + nombreSalida);
             img.save(nombreSalida);
         }
     }

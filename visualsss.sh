@@ -12,7 +12,7 @@ BIN_DIR="bin"
 MAIN_CLASS="VisualSSS"
 DEFAULT_RESOURCES="resources"
 DEFAULT_SHADOWS="resources/sombras"
-DEFAULT_OUTPUT="resources/recovered/recuperado.bmp"
+DEFAULT_OUTPUT="resources/recuperado.bmp"
 
 function usage() {
   echo "Uso: $0 -d|-r [opciones]"

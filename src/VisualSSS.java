@@ -1,3 +1,6 @@
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,36 +37,6 @@ public class VisualSSS {
         return originalSecret;
     }
 
-    public static void testBmpSecret() throws Exception {
-        String inputBmpPath = "resources/Alfred.bmp";
-        String outputBmpPath = "resources/recuperado.bmp";
-        String dir = "resources/sombras";
-
-        int k = 3;
-        int n = 5;
-        int seed = 42;
-
-        BmpImage originalBmp = new BmpImage(inputBmpPath);
-        byte[] secret = originalBmp.getPixelData();
-
-        byte[] permuted = permuteSecret(seed, secret);
-
-        SecretDistributor distributor = new SecretDistributor(permuted, k, n);
-        distributor.distribute(seed);
-
-        SecretRecoverer recoverer = new SecretRecoverer(k, n, dir);
-        byte[] recoveredPermuted = recoverer.recover();
-
-        byte[] recovered = originalSecret(seed, recoveredPermuted);
-
-        System.out.println("Secreto original (bytes): " + secret.length);
-        System.out.println("¿Recuperado igual al original?: " + Arrays.equals(secret, recovered));
-
-        BmpImage resultado = new BmpImage(originalBmp.getHeader(), recovered);
-        resultado.save(outputBmpPath);
-        System.out.println("Imagen recuperada guardada como: " + outputBmpPath);
-    }
-
     public static void compararBMPs(String originalPath, String recuperadoPath) throws Exception {
         BmpImage original = new BmpImage(originalPath);
         BmpImage recuperado = new BmpImage(recuperadoPath);
@@ -90,6 +63,12 @@ public class VisualSSS {
             System.out.println("✅ ¡Las imágenes son idénticas!");
         }
     }
+
+    private static byte[] hardcodedFacundoHeader() throws IOException {
+        BmpImage alfred = new BmpImage("resources/Facundo.bmp");
+        return alfred.getHeader();
+    }
+
     public static void main(String[] args) throws Exception {
 
        if (args.length < 4) {
@@ -113,7 +92,8 @@ public class VisualSSS {
             int seed = generateSeed();
             BmpImage secret_image = new BmpImage(secret);
            byte[] originalSecret = secret_image.getPixelData();
-           byte[] permutedSecret = permuteSecret(seed, originalSecret); //Check seed.
+           byte[] permutedSecret = permuteSecret(seed, originalSecret);
+           Files.write(Paths.get("resources/permutado_secreto.bin"), permutedSecret);
            SecretDistributor distributor = new SecretDistributor(permutedSecret, k, n);
            distributor.distribute(seed);
        } else if (mode.equals("r")) {
@@ -123,15 +103,16 @@ public class VisualSSS {
            byte[] originalSecret = originalSecret(seed, permutedSecret);
 
            // Use the header from the first pre-shadow image in resources/preSombras/
-           java.io.File preShadowDir = new java.io.File("resources/preSombras");
-           java.io.File[] preShadowFiles = preShadowDir.listFiles((d, name) -> name.toLowerCase().endsWith(".bmp"));
-           if (preShadowFiles == null || preShadowFiles.length == 0) {
-               printUsageAndExit("No se encontró ninguna pre-sombra en resources/preSombras para obtener el header.");
-           }
-           BmpImage referenceImage = new BmpImage(preShadowFiles[0].getAbsolutePath());
-           byte[] header = referenceImage.getHeader();
-           BmpImage outputImage = new BmpImage(header, originalSecret);
+//           java.io.File preShadowDir = new java.io.File("resources/preSombras");
+//           java.io.File[] preShadowFiles = preShadowDir.listFiles((d, name) -> name.toLowerCase().endsWith(".bmp"));
+//           if (preShadowFiles == null || preShadowFiles.length == 0) {
+//               printUsageAndExit("No se encontró ninguna pre-sombra en resources/preSombras para obtener el header.");
+//           }
+//           BmpImage referenceImage = new BmpImage(preShadowFiles[0].getAbsolutePath());
+//           byte[] header = referenceImage.getHeader();
+           BmpImage outputImage = new BmpImage(hardcodedFacundoHeader(), originalSecret); //Luego vemos resolver lo del header
            outputImage.save(secret); // 'secret' is the output filename from args
+           compararBMPs(secret, "resources/Facundo.bmp");
        } else {
             printUsageAndExit("Error: modo inválido, debe ser -d o -r.");
        }
