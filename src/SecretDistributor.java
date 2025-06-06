@@ -57,6 +57,7 @@ public class SecretDistributor {
 
             byte[] pixelData = img.getPixelData();
             byte[] valoresAOcultar = new byte[cantidadPolinomios];
+            boolean[] isBorder = new boolean[cantidadPolinomios];
 
             for (int j = 0; j < cantidadPolinomios; j++) {
                 // Get the coefficients for this polynomial
@@ -65,37 +66,26 @@ public class SecretDistributor {
                 for (int ci = 0; ci < k; ci++) {
                     coef[ci] = Byte.toUnsignedInt(permutedSecret[inicio + ci]);
                 }
-                boolean valid;
+
                 int[] resultados = new int[n];
-                do {
-                    valid = true;
-                    // Evaluate for all x = 1..n
-                    for (int x = 1; x <= n; x++) {
-                        int resultado = 0;
-                        for (int i = 0; i < k; i++) {
-                            resultado += coef[i] * (int) Math.pow(x, i);
-                        }
-                        resultado = resultado % 257;
-                        resultados[x - 1] = resultado;
-                        if (resultado == 256) {
-                            valid = false;
-                        }
-                    }
-                    if (!valid) {
-                        // Decrement the first nonzero coefficient
-                        for (int i = 0; i < k; i++) {
-                            if (coef[i] != 0) {
-                                coef[i] = coef[i] - 1;
-                                break;
-                            }
-                        }
-                    }
-                } while (!valid);
-                // Use the value for this sombraId
+                int resultado = 0;
+                for (int i = 0; i < k; i++) {
+                    resultado += coef[i] * (int) Math.pow(sombraId, i);
+                }
+
+                resultado = resultado % 257;
+
+                if(resultado == 256) {
+                    isBorder[j] = true;
+                    resultado = 255;
+                } else {
+                    isBorder[j] = false;
+                }
+                resultados[sombraId - 1] = resultado;
                 valoresAOcultar[j] = (byte) resultados[sombraId - 1];
             }
 
-            byte[] cuerpoModificado = LsbSteganography.embed(pixelData, valoresAOcultar);
+            byte[] cuerpoModificado = LsbSteganography.embed(pixelData, valoresAOcultar, isBorder);
             img.setPixelData(cuerpoModificado);
 
             img.setReservedBytes(6, (short) seed);
@@ -103,7 +93,6 @@ public class SecretDistributor {
             img.setReservedBytes(34,(short) cantidadPolinomios);
 
             String nombreSalida = String.format("resources/sombras/sombra%d.bmp", sombraId);
-            System.out.println("Guardando sombra " + sombraId + " en: " + nombreSalida);
             img.save(nombreSalida);
         }
     }
