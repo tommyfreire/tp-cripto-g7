@@ -5,6 +5,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Arrays;
 
 public class SecretRecoverer {
     private final int k;
@@ -89,6 +90,14 @@ public class SecretRecoverer {
 
             int[] x = sombraIds;
 
+            // Debug prints for failing bytes
+            if (j >= 14391/3 && j <= 14393/3 || j >= 17589/3 && j <= 17591/3 || 
+                j >= 31020/3 && j <= 31022/3 || j >= 49071/3 && j <= 49073/3) {
+                System.out.printf("\nDebug for polynomial %d (bytes %d-%d):\n", j, j*3, j*3+2);
+                System.out.println("Shadow IDs (x values): " + Arrays.toString(x));
+                System.out.println("Extracted values (y values): " + Arrays.toString(y));
+            }
+
             // Construir la matriz de Vandermonde y resolver con Gauss
             int[][] A = new int[k][k];
             for (int row = 0; row < k; row++) {
@@ -101,9 +110,23 @@ public class SecretRecoverer {
             }
 
             int[] coef = gaussMod(A, y, 257);
+
+            // Debug prints for failing bytes
+            if (j >= 14391/3 && j <= 14393/3 || j >= 17589/3 && j <= 17591/3 || 
+                j >= 31020/3 && j <= 31022/3 || j >= 49071/3 && j <= 49073/3) {
+                System.out.println("Recovered coefficients: " + Arrays.toString(coef));
+                System.out.println("Verifying polynomial evaluation:");
+                for (int i = 0; i < k; i++) {
+                    int eval = 0;
+                    for (int c = 0; c < k; c++) {
+                        eval = (eval + coef[c] * (int)Math.pow(x[i], c)) % 257;
+                    }
+                    System.out.printf("P(%d) = %d (expected %d)\n", x[i], eval, y[i]);
+                }
+            }
+
             for (int i = 0; i < k; i++) {
                 int index = j * k + i;
-
                 recoveredPermuted[index] = (byte) coef[i];
 
 //                int expected = Byte.toUnsignedInt(expectedPermuted[index]);
@@ -112,7 +135,6 @@ public class SecretRecoverer {
 //                    System.out.printf("❌ Byte %d: esperado = %d, recuperado = %d (polinomio %d, coeficiente %d)%n",
 //                            index, expected, actual, j, i);
 //                }
-
             }
 
         }

@@ -1,6 +1,7 @@
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Arrays;
 
 public class SecretDistributor {
     private final byte[] permutedSecret;
@@ -67,6 +68,13 @@ public class SecretDistributor {
                     coef[ci] = Byte.toUnsignedInt(permutedSecret[inicio + ci]);
                 }
 
+                // Debug prints for failing bytes
+                if (j >= 14391/3 && j <= 14393/3 || j >= 17589/3 && j <= 17591/3 || 
+                    j >= 31020/3 && j <= 31022/3 || j >= 49071/3 && j <= 49073/3) {
+                    System.out.printf("\nDebug for polynomial %d (bytes %d-%d):\n", j, j*3, j*3+2);
+                    System.out.println("Original coefficients: " + Arrays.toString(coef));
+                }
+
                 int[] resultados = new int[n];
                 int resultado = 0;
                 for (int i = 0; i < k; i++) {
@@ -83,6 +91,12 @@ public class SecretDistributor {
                 }
                 resultados[sombraId - 1] = resultado;
                 valoresAOcultar[j] = (byte) resultados[sombraId - 1];
+
+                // Debug prints for failing bytes
+                if (j >= 14391/3 && j <= 14393/3 || j >= 17589/3 && j <= 17591/3 || 
+                    j >= 31020/3 && j <= 31022/3 || j >= 49071/3 && j <= 49073/3) {
+                    System.out.printf("P(%d) = %d (isBorder: %b)\n", sombraId, resultado, isBorder[j]);
+                }
             }
 
             byte[] cuerpoModificado = LsbSteganography.embed(pixelData, valoresAOcultar, isBorder);
