@@ -68,18 +68,23 @@ public class SecretRecoverer {
 
         // Paso 3: extraer los q valores de cada sombra
         byte[][] extracted = new byte[k][q];
+        boolean[][] isBorder = new boolean[k][q];
         for (int i = 0; i < k; i++) {
-            extracted[i] = LsbSteganography.extract(sombras.get(i).getPixelData(), q);
+            extracted[i] = LsbSteganography.extract(sombras.get(i).getPixelData(), q, isBorder[i]);
         }
 
         // Paso 4: resolver q sistemas de k ecuaciones para recuperar los coeficientes
         byte[] recoveredPermuted = new byte[q * k];
-        byte[] expectedPermuted = Files.readAllBytes(Paths.get("resources/permutado_secreto.bin"));
+        //byte[] expectedPermuted = Files.readAllBytes(Paths.get("resources/permutado_secreto.bin"));
 
         for (int j = 0; j < q; j++) {
             int[] y = new int[k];
             for (int i = 0; i < k; i++) {
-                y[i] = Byte.toUnsignedInt(extracted[i][j]); // Pj(x = sombraId)
+                int aux = Byte.toUnsignedInt(extracted[i][j]); // Pj(x = sombraId)
+                if(aux == 255) {
+                    aux = (isBorder[i][j]) ? 256 : 255;
+                }
+                y[i] = aux;
             }
 
             int[] x = sombraIds;
@@ -98,14 +103,15 @@ public class SecretRecoverer {
             int[] coef = gaussMod(A, y, 257);
             for (int i = 0; i < k; i++) {
                 int index = j * k + i;
+
                 recoveredPermuted[index] = (byte) coef[i];
 
-                int expected = Byte.toUnsignedInt(expectedPermuted[index]);
-                int actual = Byte.toUnsignedInt(recoveredPermuted[index]);
-                if (expected != actual) {
-                    System.out.printf("❌ Byte %d: esperado = %d, recuperado = %d (polinomio %d, coeficiente %d)%n",
-                            index, expected, actual, j, i);
-                }
+//                int expected = Byte.toUnsignedInt(expectedPermuted[index]);
+//                int actual = Byte.toUnsignedInt(recoveredPermuted[index]);
+//                if (expected != actual && index <= 500) {
+//                    System.out.printf("❌ Byte %d: esperado = %d, recuperado = %d (polinomio %d, coeficiente %d)%n",
+//                            index, expected, actual, j, i);
+//                }
 
             }
 

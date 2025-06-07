@@ -64,6 +64,27 @@ public class VisualSSS {
         }
     }
 
+    public static void testCasoBorde() throws Exception {
+        // Este polinomio genera 256 al evaluarse en x = 2
+        int k = 2;
+        int n = 3;
+        int seed = 42;
+
+        byte[] permutedSecret = new byte[] { (byte)101, (byte)78, (byte)55, (byte)240};
+
+        String dir = "resources/sombras";
+
+        SecretDistributor dist = new SecretDistributor(permutedSecret, k, n);
+        dist.distribute(seed);
+
+        SecretRecoverer rec = new SecretRecoverer(k, n, dir);
+        byte[] recovered = rec.recover();
+
+        System.out.println("Original permutedSecret: " + Arrays.toString(permutedSecret));
+        System.out.println("Recovered permuted:      " + Arrays.toString(recovered));
+    }
+
+
     private static byte[] hardcodedFacundoHeader() throws IOException {
         BmpImage alfred = new BmpImage("resources/Facundo.bmp");
         return alfred.getHeader();
@@ -101,21 +122,13 @@ public class VisualSSS {
            byte[] permutedSecret = recoverer.recover();
            int seed = recoverer.getSeed();
            byte[] originalSecret = originalSecret(seed, permutedSecret);
-
-           // Use the header from the first pre-shadow image in resources/preSombras/
-//           java.io.File preShadowDir = new java.io.File("resources/preSombras");
-//           java.io.File[] preShadowFiles = preShadowDir.listFiles((d, name) -> name.toLowerCase().endsWith(".bmp"));
-//           if (preShadowFiles == null || preShadowFiles.length == 0) {
-//               printUsageAndExit("No se encontró ninguna pre-sombra en resources/preSombras para obtener el header.");
-//           }
-//           BmpImage referenceImage = new BmpImage(preShadowFiles[0].getAbsolutePath());
-//           byte[] header = referenceImage.getHeader();
-           BmpImage outputImage = new BmpImage(hardcodedFacundoHeader(), originalSecret); //Luego vemos resolver lo del header
-           outputImage.save(secret); // 'secret' is the output filename from args
+           BmpImage outputImage = new BmpImage(hardcodedFacundoHeader(), originalSecret);
+           outputImage.save(secret);
            compararBMPs(secret, "resources/Facundo.bmp");
        } else {
             printUsageAndExit("Error: modo inválido, debe ser -d o -r.");
        }
+//        testCasoBorde();
     }
 
     private static Map<String, String> parseArguments(String[] args) {

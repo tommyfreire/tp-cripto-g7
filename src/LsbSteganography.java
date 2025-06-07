@@ -1,11 +1,6 @@
 public class LsbSteganography {
 
-    /**
-     * Oculta los bits de 'dataToHide' dentro de los bits menos significativos de cada byte de 'carrierData'.
-     * Si no hay espacio suficiente en los LSB, usa progresivamente el segundo, tercer... hasta octavo bit menos significativo.
-     */
-    public static byte[] embed(byte[] carrierData, byte[] dataToHide) {
-
+    public static byte[] embed(byte[] carrierData, byte[] dataToHide, boolean[] isBorder) {
         byte[] modified = carrierData.clone();
         int carrierCapacity = carrierData.length;
         int totalBitsToHide = dataToHide.length * 8;
@@ -13,7 +8,7 @@ public class LsbSteganography {
         int bitIndex = 0;
 
         while (bitIndex < totalBitsToHide) {
-            int bitPosition = bitIndex / carrierCapacity; // Qué bit menos significativo usar (0 = LSB, 1 = 2do bit, ...)
+            int bitPosition = bitIndex / carrierCapacity; // Which bit to use (0 = LSB, 1 = 2nd bit, ...)
             if (bitPosition >= 8) {
                 throw new IllegalArgumentException("No hay suficientes bits disponibles para ocultar toda la información.");
             }
@@ -28,17 +23,22 @@ public class LsbSteganography {
             modified[carrierIndex] &= (byte) ~(1 << bitPosition);
             modified[carrierIndex] |= (byte) (bitToHide << bitPosition);
 
+            // Handle the MSB for "border" cases
+            if (dataToHide[byteIndex] == (byte) 255) { // First byte of the group
+                if (isBorder[byteIndex]) {
+                    modified[carrierIndex] |= (byte) (1 << 7); // Set MSB to 1
+                } else {
+                    modified[carrierIndex] &= (byte) ~(1 << 7); // Set MSB to 0
+                }
+            }
+
             bitIndex++;
         }
 
         return modified;
     }
 
-    /**
-     * Extrae 'numBytes' ocultos desde los bits menos significativos de cada byte de 'carrierData'.
-     * Recupera secuencialmente desde el LSB, luego el segundo bit, etc., hasta completar los datos ocultos.
-     */
-    public static byte[] extract(byte[] carrierData, int numBytes) {
+    public static byte[] extract(byte[] carrierData, int numBytes, boolean[] isBorder) {
         int totalBitsToExtract = numBytes * 8;
         int carrierCapacity = carrierData.length;
 
@@ -46,7 +46,7 @@ public class LsbSteganography {
         int bitIndex = 0;
 
         while (bitIndex < totalBitsToExtract) {
-            int bitPosition = bitIndex / carrierCapacity; // qué bit menos significativo se está leyendo
+            int bitPosition = bitIndex / carrierCapacity; // Which bit to read
             if (bitPosition >= 8) {
                 throw new IllegalArgumentException("No hay suficientes datos disponibles para extraer toda la información.");
             }
@@ -56,6 +56,12 @@ public class LsbSteganography {
 
             int byteIndex = bitIndex / 8;
             result[byteIndex] = (byte) ((result[byteIndex] << 1) | bit);
+
+            // Handle the MSB for "border" cases
+            if (bitIndex % 8 == 7) { // First byte of the group
+                int msb = (carrierData[carrierIndex] >> 7) & 1;
+                isBorder[byteIndex] = (msb == 1);
+            }
 
             bitIndex++;
         }
