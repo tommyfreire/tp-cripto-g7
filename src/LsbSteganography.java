@@ -9,9 +9,6 @@ public class LsbSteganography {
 
         while (bitIndex < totalBitsToHide) {
             int bitPosition = bitIndex / carrierCapacity; // Which bit to use (0 = LSB, 1 = 2nd bit, ...)
-            if (bitPosition >= 8) {
-                throw new IllegalArgumentException("No hay suficientes bits disponibles para ocultar toda la información.");
-            }
 
             int carrierIndex = bitIndex % carrierCapacity;
 
@@ -23,12 +20,13 @@ public class LsbSteganography {
             modified[carrierIndex] &= (byte) ~(1 << bitPosition);
             modified[carrierIndex] |= (byte) (bitToHide << bitPosition);
 
-            // Handle the MSB for "border" cases
-            if (dataToHide[byteIndex] == (byte) 255) { // First byte of the group
+            if (dataToHide[byteIndex] == (byte) 255) {
+                int msbPosition = 7 - ((bitIndex / carrierCapacity) % 8); // Cycle through MSB, 2nd MSB, ...
+
                 if (isBorder[byteIndex]) {
-                    modified[carrierIndex] |= (byte) (1 << 7); // Set MSB to 1
+                    modified[carrierIndex] |= (byte) (1 << msbPosition); // Set the current MSB to 1
                 } else {
-                    modified[carrierIndex] &= (byte) ~(1 << 7); // Set MSB to 0
+                    modified[carrierIndex] &= (byte) ~(1 << msbPosition); // Set the current MSB to 0
                 }
             }
 
@@ -46,10 +44,7 @@ public class LsbSteganography {
         int bitIndex = 0;
 
         while (bitIndex < totalBitsToExtract) {
-            int bitPosition = bitIndex / carrierCapacity; // Which bit to read
-            if (bitPosition >= 8) {
-                throw new IllegalArgumentException("No hay suficientes datos disponibles para extraer toda la información.");
-            }
+            int bitPosition = (bitIndex / carrierCapacity) % 8;
 
             int carrierIndex = bitIndex % carrierCapacity;
             int bit = (carrierData[carrierIndex] >> bitPosition) & 1;
@@ -59,7 +54,8 @@ public class LsbSteganography {
 
             // Handle the MSB for "border" cases
             if (bitIndex % 8 == 7) { // First byte of the group
-                int msb = (carrierData[carrierIndex] >> 7) & 1;
+                int msbPosition = 7 - ((bitIndex / carrierCapacity) % 8); // Cycle through MSB, 2nd MSB, ...
+                int msb = (carrierData[carrierIndex] >> msbPosition) & 1;
                 isBorder[byteIndex] = (msb == 1);
             }
 
