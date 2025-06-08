@@ -9,14 +9,18 @@ public class SecretDistributor {
     private final byte[] permutedSecret;
     private final int k;
     private final int n;
+    private final int secretWidth;
+    private final int secretHeight;
 
     /**
      * Constructs a SecretDistributor.
      * @param permutedSecret The permuted secret to distribute
      * @param k The threshold for recovery
      * @param n The number of shares to create
+     * @param secretWidth The width of the secret image
+     * @param secretHeight The height of the secret image
      */
-    public SecretDistributor(byte[] permutedSecret, int k, int n) {
+    public SecretDistributor(byte[] permutedSecret, int k, int n, int secretWidth, int secretHeight) {
         if (permutedSecret.length % k != 0) {
             throw new IllegalArgumentException("La cantidad de bytes del secreto no es divisible por k. " +
                     "No se pueden formar polinomios completos.");
@@ -33,6 +37,8 @@ public class SecretDistributor {
         this.permutedSecret = permutedSecret;
         this.k = k;
         this.n = n;
+        this.secretWidth = secretWidth;
+        this.secretHeight = secretHeight;
     }
 
     public int getCantidadPolinomios() {
@@ -50,16 +56,40 @@ public class SecretDistributor {
         if (archivos == null || archivos.length < n) {
             throw new IllegalArgumentException("No hay suficientes imágenes BMP en el directorio: resources/preSombras");
         }
+
         List<BmpImage> portadoras = new ArrayList<>();
         for (int i = 0; i < n; i++) {
-            portadoras.add(new BmpImage(archivos[i].getAbsolutePath()));
+            String fileName = archivos[i].getName();
+            BmpImage portadora = new BmpImage(archivos[i].getAbsolutePath());
+            
+            // For k=8, crop the carrier image to match the secret image size
+            if (k == 8) {
+                if (portadora.getWidth() != secretWidth || portadora.getHeight() != secretHeight) {
+                    System.out.printf("Recortando imagen portadora %d (%s):\n", i + 1, fileName);
+                    System.out.printf("  - Tamaño original: %dx%d píxeles\n", portadora.getWidth(), portadora.getHeight());
+                    System.out.printf("  - Tamaño objetivo: %dx%d píxeles\n", secretWidth, secretHeight);
+                    System.out.printf("  - Se tomarán los píxeles centrales:\n");
+                    System.out.printf("    * Horizontal: desde %d hasta %d\n", 
+                        (portadora.getWidth() - secretWidth) / 2,
+                        (portadora.getWidth() + secretWidth) / 2);
+                    System.out.printf("    * Vertical: desde %d hasta %d\n",
+                        (portadora.getHeight() - secretHeight) / 2,
+                        (portadora.getHeight() + secretHeight) / 2);
+                    portadora = portadora.cropToSize(secretWidth, secretHeight);
+                }
+            }
+            
+            portadoras.add(portadora);
         }
+
         int cantidadPolinomios = getCantidadPolinomios();
+
         for (int sombraId = 1; sombraId <= n; sombraId++) {
             BmpImage img = portadoras.get(sombraId - 1);
             byte[] pixelData = img.getPixelData();
             byte[] valoresAOcultar = new byte[cantidadPolinomios];
             boolean[] isBorder = new boolean[cantidadPolinomios];
+
             for (int j = 0; j < cantidadPolinomios; j++) {
                 int inicio = j * k;
                 int[] coef = new int[k];
@@ -79,11 +109,23 @@ public class SecretDistributor {
                 }
                 valoresAOcultar[j] = (byte) resultado;
             }
-            byte[] cuerpoModificado = LsbSteganography.embed(pixelData, valoresAOcultar, isBorder);
+
+            byte[] cuerpoModificado = LsbSteganography.embed(
+                pixelData,
+                img.getWidth(),
+                img.getHeight(),
+                valoresAOcultar,
+                isBorder
+            );
             img.setPixelData(cuerpoModificado);
+
+            // Store seed in bytes 6-7 (little endian)
             img.setReservedBytes(6, (short) seed);
+            // Store shadow number in bytes 8-9 (little endian)
             img.setReservedBytes(8, (short) sombraId);
-            img.setReservedBytes(34,(short) cantidadPolinomios);
+            // Store number of polynomials in bytes 34-35
+            img.setReservedBytes(34, (short) cantidadPolinomios);
+
             String nombreSalida = String.format("resources/sombras/sombra%d.bmp", sombraId);
             img.save(nombreSalida);
         }

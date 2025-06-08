@@ -93,7 +93,13 @@ public class VisualSSS {
             BmpImage secret_image = new BmpImage(secret);
             byte[] originalSecret = secret_image.getPixelData();
             byte[] permutedSecret = permuteSecret(seed, originalSecret);
-            SecretDistributor distributor = new SecretDistributor(permutedSecret, k, n);
+            SecretDistributor distributor = new SecretDistributor(
+                permutedSecret, 
+                k, 
+                n,
+                secret_image.getWidth(),
+                secret_image.getHeight()
+            );
             distributor.distribute(seed);
         } else if (mode.equals("r")) {
             SecretRecoverer recoverer = new SecretRecoverer(k, n, dir);

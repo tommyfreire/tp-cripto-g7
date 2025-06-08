@@ -8,48 +8,42 @@ public class LsbSteganography {
     private static final int MAX_BYTE_VALUE = 255;
 
     /**
-     * Embeds data into carrier bytes using LSB steganography.
-     * 
-     * @param carrierData The carrier bytes where data will be hidden
-     * @param dataToHide The data to be hidden in the carrier
+     * Embeds data into the LSB of each pixel in a BMP 8bpp image, skipping padding bytes.
+     * @param carrierData The carrier BMP pixel data (including padding)
+     * @param width The width of the BMP image
+     * @param height The height of the BMP image
+     * @param dataToHide The data to hide
      * @param isBorder Array indicating which bytes are border cases (255)
      * @return Modified carrier data with hidden information
      */
-    public static byte[] embed(byte[] carrierData, byte[] dataToHide, boolean[] isBorder) {
-        if (carrierData == null || dataToHide == null || isBorder == null) {
-            throw new IllegalArgumentException("Input arrays cannot be null");
-        }
-        if (dataToHide.length != isBorder.length) {
-            throw new IllegalArgumentException("Data and border arrays must have same length");
-        }
-
+    public static byte[] embed(byte[] carrierData, int width, int height, byte[] dataToHide, boolean[] isBorder) {
+        int rowSize = ((width + 3) / 4) * 4;
         byte[] modified = carrierData.clone();
-        int carrierCapacity = carrierData.length;
-        int totalBitsToHide = dataToHide.length * BYTE_SIZE;
+        int totalBitsToHide = dataToHide.length * 8;
+        int bitIdx = 0;
 
-        for (int bitIndex = 0; bitIndex < totalBitsToHide; bitIndex++) {
-            int bitPosition = bitIndex / carrierCapacity; // Which bit to use (0 = LSB, 1 = 2nd bit, ...)
-            int carrierIndex = bitIndex % carrierCapacity;
-            int byteIndex = bitIndex / BYTE_SIZE;
-            int bitInByte = BYTE_SIZE - 1 - (bitIndex % BYTE_SIZE);
+        for (int y = 0; y < height && bitIdx < totalBitsToHide; y++) {
+            int rowOffset = y * rowSize;
+            for (int x = 0; x < width && bitIdx < totalBitsToHide; x++) {
+                int byteIndex = bitIdx / 8;
+                int bitInByte = 7 - (bitIdx % 8);
+                int bitToHide = (dataToHide[byteIndex] >> bitInByte) & 1;
 
-            int bitToHide = (dataToHide[byteIndex] >> bitInByte) & 1;
+                // Modifica solo el LSB del píxel real
+                modified[rowOffset + x] = (byte) ((modified[rowOffset + x] & 0xFE) | bitToHide);
 
-            // Clear the target bit and set it to the new value
-            modified[carrierIndex] &= (byte) ~(1 << bitPosition);
-            modified[carrierIndex] |= (byte) (bitToHide << bitPosition);
-
-            // Handle special case for byte value 255
-            if (dataToHide[byteIndex] == (byte) MAX_BYTE_VALUE) {
-                int msbPosition = BYTE_SIZE - 1 - ((bitIndex / carrierCapacity) % BYTE_SIZE);
-                if (isBorder[byteIndex]) {
-                    modified[carrierIndex] |= (byte) (1 << msbPosition);
-                } else {
-                    modified[carrierIndex] &= (byte) ~(1 << msbPosition);
+                // Si es un byte de borde, setea el MSB según isBorder
+                if ((bitIdx % 8 == 0) && dataToHide[byteIndex] == (byte)255) {
+                    if (isBorder[byteIndex]) {
+                        modified[rowOffset + x] |= (byte)0x80;
+                    } else {
+                        modified[rowOffset + x] &= (byte)0x7F;
+                    }
                 }
+
+                bitIdx++;
             }
         }
-
         return modified;
     }
 
