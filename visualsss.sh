@@ -35,13 +35,8 @@ function clean_files() {
       if [ "$found" -gt 0 ]; then
         echo "Archivos de sombras encontrados en $dir:"
         ls "$dir"/sombra*.bmp
-        read -p "¿Eliminar estos archivos? [y/N] " yn
-        if [[ "$yn" =~ ^[Yy]$ ]]; then
-          rm "$dir"/sombra*.bmp
-          echo "Eliminadas."
-        else
-          echo "Omitidas."
-        fi
+        rm "$dir"/sombra*.bmp
+        echo "Eliminadas."
       fi
     fi
   done
@@ -163,8 +158,8 @@ else
   JAVA_CMD+=" -dir $DIR"
 fi
 
-echo "Running: $JAVA_CMD"
+echo "Corriendo: $JAVA_CMD"
 $JAVA_CMD
 
-echo "Done."
-echo "Podes correr '$0 clean' para eliminar los archivos de sombras y el archivo recuperado." 
+echo "Listo."
+echo "Puedes correr '$0 clean' para eliminar los archivos de sombras y el archivo recuperado." 
