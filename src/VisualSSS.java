@@ -82,6 +82,10 @@ public class VisualSSS {
             printUsageAndExit("Error: el archivo secreto debe tener extensión .bmp");
         }
         if (mode.equals("d")) {
+            // If the secret file path is not found, print an error and exit
+            if (!new java.io.File(secret).exists()) {
+                printUsageAndExit("Error: el archivo secreto no existe");
+            }
             int seed = generateSeed();
             BmpImage secret_image = new BmpImage(secret);
             byte[] originalSecret = secret_image.getPixelData();
