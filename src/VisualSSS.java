@@ -88,7 +88,7 @@ public class VisualSSS {
             if (!new java.io.File(secret).exists()) {
                 printUsageAndExit("Error: el archivo secreto no existe");
             }
-            File sombrasDir = new File(dir);
+            File sombrasDir = new File("resources/sombras");
             if (sombrasDir.exists() && sombrasDir.isDirectory()) {
                 java.io.File[] oldShadows = sombrasDir.listFiles((d, name) -> name.startsWith("sombra") && name.endsWith(".bmp"));
                 if (oldShadows != null) {
@@ -129,7 +129,6 @@ public class VisualSSS {
             BmpImage outputImage = new BmpImage(header, originalSecret);;
             outputImage.save(secret);
             System.out.println("Secreto recuperado y guardado en: " + secret);
-            compararBMPs(secret, "resources/Whitneyssd.bmp");
         } else {
             printUsageAndExit("Error: modo inválido, debe ser -d o -r.");
         }

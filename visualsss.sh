@@ -63,6 +63,15 @@ if [ "$1" == "clean" ]; then
   exit 0
 fi
 
+if [ "$1" == "-c" ]; then
+  echo "Compilando archivos fuente de Java..."
+  COMPILE_CMD="javac -d $BIN_DIR src/VisualSSS.java src/SecretDistributor.java src/SecretRecoverer.java src/LsbSteganography.java src/BmpImage.java src/PermutationTable.java"
+  echo "Corriendo $COMPILE_CMD"
+  $COMPILE_CMD
+  echo "Compilación completada."
+  exit 0
+fi
+
 if [ $# -lt 1 ]; then
   usage
 fi
@@ -135,9 +144,15 @@ if [ -z "$DIR" ]; then
   DIR="."
 fi
 
-if [ "$1" != "clean" ]; then
+if [ "$MODE" == "-d" ]; then
+  if [ -n "$N" ]; then
+    JAVA_CMD+=" -n $N"
+  fi
+  JAVA_CMD+=" -dir $DIR"
   echo "Compilando archivos fuente de Java..."
-  javac -d $BIN_DIR src/VisualSSS.java src/SecretDistributor.java src/SecretRecoverer.java src/LsbSteganography.java src/BmpImage.java src/PermutationTable.java
+  COMPILE_CMD="javac -d $BIN_DIR src/VisualSSS.java src/SecretDistributor.java src/SecretRecoverer.java src/LsbSteganography.java src/BmpImage.java src/PermutationTable.java"
+  echo "Corriendo: $COMPILE_CMD"
+  $COMPILE_CMD
 fi
 
 # Build the Java command
@@ -157,5 +172,4 @@ fi
 echo "Corriendo: $JAVA_CMD"
 $JAVA_CMD
 
-echo "Listo."
 echo "Puedes correr '$0 clean' para eliminar los archivos de sombras y el archivo recuperado." 

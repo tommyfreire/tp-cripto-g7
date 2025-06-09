@@ -59,7 +59,7 @@ public class SecretDistributor {
         File carpeta = new File(dir);
         File[] archivos = carpeta.listFiles((f, name) -> name.toLowerCase().endsWith(".bmp"));
         if (archivos == null || archivos.length < n) {
-            throw new IllegalArgumentException("No hay suficientes imágenes BMP en el directorio: resources/preSombras");
+            throw new IllegalArgumentException("No hay suficientes imágenes BMP en el directorio: " + dir);
         }
 
         List<BmpImage> portadoras = new ArrayList<>();
@@ -75,16 +75,6 @@ public class SecretDistributor {
             // For k=8, crop the carrier image to match the secret image size
             if (k == 8) {
                 if (portadora.getWidth() != secretWidth || portadora.getHeight() != secretHeight) {
-                    System.out.printf("Recortando imagen portadora %d (%s):\n", i + 1, fileName);
-                    System.out.printf("  - Tamaño original: %dx%d píxeles\n", portadora.getWidth(), portadora.getHeight());
-                    System.out.printf("  - Tamaño objetivo: %dx%d píxeles\n", secretWidth, secretHeight);
-                    System.out.printf("  - Se tomarán los píxeles centrales:\n");
-                    System.out.printf("    * Horizontal: desde %d hasta %d\n", 
-                        (portadora.getWidth() - secretWidth) / 2,
-                        (portadora.getWidth() + secretWidth) / 2);
-                    System.out.printf("    * Vertical: desde %d hasta %d\n",
-                        (portadora.getHeight() - secretHeight) / 2,
-                        (portadora.getHeight() + secretHeight) / 2);
                     portadora = portadora.cropToSize(secretWidth, secretHeight);
                 }
             }
