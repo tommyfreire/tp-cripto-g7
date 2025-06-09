@@ -1,6 +1,4 @@
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -45,26 +43,31 @@ public class VisualSSS {
         return originalSecret;
     }
 
-    /**
-     * Compares two BMP images and prints the number of differing bytes.
-     */
-    // public static void compararBMPs(String originalPath, String recuperadoPath) throws Exception {
-    //     BmpImage original = new BmpImage(originalPath);
-    //     BmpImage recuperado = new BmpImage(recuperadoPath);
-    //     byte[] a = original.getPixelData();
-    //     byte[] b = recuperado.getPixelData();
-    //     if (a.length != b.length) {
-    //         System.out.println("❌ Las imágenes tienen diferente cantidad de bytes: " + a.length + " vs " + b.length);
-    //         return;
-    //     }
-    //     int errores = 0;
-    //     System.out.println("Total de diferencias: " + errores + " de " + a.length + " píxeles (" + (100.0 * errores / a.length) + "%)");
-    //     if (errores == 0) {
-    //         System.out.println("✅ ¡Las imágenes son idénticas!");
-    //     }
-    // }
+    public static void compararBMPs(String originalPath, String recuperadoPath) throws Exception {
+        BmpImage original = new BmpImage(originalPath);
+        BmpImage recuperado = new BmpImage(recuperadoPath);
 
+        byte[] a = original.getPixelData();
+        byte[] b = recuperado.getPixelData();
 
+        if (a.length != b.length) {
+            System.out.println("❌ Las imágenes tienen diferente cantidad de bytes: " + a.length + " vs " + b.length);
+            return;
+        }
+
+        int errores = 0;
+        for (int i = 0; i < a.length; i++) {
+            if (a[i] != b[i]) {
+                errores++;
+                System.out.printf("Byte %d: original = %d, recuperado = %d%n", i, Byte.toUnsignedInt(a[i]), Byte.toUnsignedInt(b[i]));
+            }
+        }
+        System.out.println("Total de diferencias: " + errores + " de " + a.length + " píxeles (" + (100.0 * errores / a.length) + "%)");
+
+        if (errores == 0) {
+            System.out.println("✅ ¡Las imágenes son idénticas!");
+        }
+    }
     /**
      * Main entry point for the application.
      */
@@ -77,17 +80,15 @@ public class VisualSSS {
         String secret = params.get("secret");
         int k = parseInt(params.get("k"), "k");
         int n = params.containsKey("n") ? parseInt(params.get("n"), "n") : -1;
-        String dir = params.getOrDefault("dir", "resources/sombras");
+        String dir = params.getOrDefault("dir", ".");
         if (!secret.endsWith(".bmp")) {
             printUsageAndExit("Error: el archivo secreto debe tener extensión .bmp");
         }
         if (mode.equals("d")) {
-            // If the secret file path is not found, print an error and exit
             if (!new java.io.File(secret).exists()) {
                 printUsageAndExit("Error: el archivo secreto no existe");
             }
-            // Delete old shadows before distributing new ones
-            java.io.File sombrasDir = new java.io.File(dir);
+            File sombrasDir = new File(dir);
             if (sombrasDir.exists() && sombrasDir.isDirectory()) {
                 java.io.File[] oldShadows = sombrasDir.listFiles((d, name) -> name.startsWith("sombra") && name.endsWith(".bmp"));
                 if (oldShadows != null) {
@@ -106,12 +107,13 @@ public class VisualSSS {
                 n,
                 secret_image.getWidth(),
                 secret_image.getHeight(),
-                secret_image
+                secret_image,
+                    dir
             );
             distributor.distribute(seed);
         } else if (mode.equals("r")) {
-            java.io.File carpeta = new java.io.File(dir);
-            java.io.File[] archivos = carpeta.listFiles((d, name) -> name.startsWith("sombra") && name.endsWith(".bmp"));
+            File carpeta = new File(dir);
+            File[] archivos = carpeta.listFiles((d, name) -> name.startsWith("sombra") && name.endsWith(".bmp"));
             if (archivos == null || archivos.length == 0) {
                 printUsageAndExit("No se encontraron sombras en el directorio: " + dir);
             }
@@ -124,9 +126,10 @@ public class VisualSSS {
             byte[] originalSecret = originalSecret(seed, permutedSecret);
             BmpImage sombra = new BmpImage(archivos[0].getAbsolutePath());
             byte[] header = sombra.getHeader();
-            BmpImage outputImage = new BmpImage(header, originalSecret);
+            BmpImage outputImage = new BmpImage(header, originalSecret);;
             outputImage.save(secret);
-            //compararBMPs(secret, "resources/Facundo.bmp");
+            System.out.println("Secreto recuperado y guardado en: " + secret);
+            compararBMPs(secret, "resources/Whitneyssd.bmp");
         } else {
             printUsageAndExit("Error: modo inválido, debe ser -d o -r.");
         }
@@ -186,8 +189,8 @@ public class VisualSSS {
     private static void printUsageAndExit(String message) {
         System.err.println(message);
         System.err.println("Uso:");
-        System.err.println("  Distribuir: visualSSS -d -secret <archivo.bmp> -k <num> [-n <num>] [-dir <directorio>]\n       (usa portadoras de resources/preSombras y guarda sombras en resources/sombras)");
-        System.err.println("  Recuperar:  visualSSS -r -secret <archivo.bmp> -k <num> [-n <num>] [-dir <directorio>]");
+        System.err.println("  Distribuir: visualSSS -d -secret <archivo.bmp> -k <num> -n <num> [-dir <directorio> (OPCIONAL: Default value = directorio actual)]\n");
+        System.err.println("  Recuperar:  visualSSS -r -secret <archivo.bmp> -k <num> -n <num> [-dir <directorio> (OPCIONAL: Default value = directorio actual)]");
         System.exit(1);
     }
 }

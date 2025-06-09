@@ -132,11 +132,7 @@ if [ -z "$SECRET" ]; then
 fi
 
 if [ -z "$DIR" ]; then
-  if [ "$MODE" == "-d" ]; then
-    DIR="$DEFAULT_RESOURCES"
-  else
-    DIR="$DEFAULT_SHADOWS"
-  fi
+  DIR="."
 fi
 
 if [ "$1" != "clean" ]; then

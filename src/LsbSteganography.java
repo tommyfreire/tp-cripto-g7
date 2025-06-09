@@ -3,65 +3,79 @@ public class LsbSteganography {
     public static byte[] embed(byte[] carrierData, byte[] dataToHide, boolean[] isBorder) {
         byte[] modified = carrierData.clone();
         int carrierCapacity = carrierData.length;
-        int totalBitsToHide = dataToHide.length * 8;
-
         int bitIndex = 0;
+        int flagcounter = 0;
 
-        while (bitIndex < totalBitsToHide) {
-            int bitPosition = bitIndex / carrierCapacity; // Which bit to use (0 = LSB, 1 = 2nd bit, ...)
+        for (int i = 0; i < dataToHide.length; i++) {
+            int value = Byte.toUnsignedInt(dataToHide[i]);
 
-            int carrierIndex = bitIndex % carrierCapacity;
+            // Embed 8 bits of the value
+            for (int bit = 0; bit < 8; bit++) {
+                int carrierIndex = bitIndex % carrierCapacity;
+                int bitPosition = (bitIndex / carrierCapacity) % 8;
 
-            int byteIndex = bitIndex / 8;
-            int bitInByte = 7 - (bitIndex % 8);
+                int bitToHide = (value >> (7 - bit)) & 1;
 
-            int bitToHide = (dataToHide[byteIndex] >> bitInByte) & 1;
+                modified[carrierIndex] &= (byte) ~(1 << bitPosition); // Clear the bit
+                modified[carrierIndex] |= (byte) (bitToHide << bitPosition); // Set the bit
 
-            modified[carrierIndex] &= (byte) ~(1 << bitPosition);
-            modified[carrierIndex] |= (byte) (bitToHide << bitPosition);
-
-            if (dataToHide[byteIndex] == (byte) 255) {
-                int msbPosition = 7 - ((bitIndex / carrierCapacity) % 8); // Cycle through MSB, 2nd MSB, ...
-
-                if (isBorder[byteIndex]) {
-                    modified[carrierIndex] |= (byte) (1 << msbPosition); // Set the current MSB to 1
-                } else {
-                    modified[carrierIndex] &= (byte) ~(1 << msbPosition); // Set the current MSB to 0
-                }
+                bitIndex++;
             }
 
-            bitIndex++;
+            // Embed the 9th bit (flag) if the value is 255
+            if (value == 255) {
+                flagcounter++;
+                int carrierIndex = bitIndex % carrierCapacity;
+                int bitPosition = (bitIndex / carrierCapacity) % 8;
+
+                int flagBit = isBorder[i] ? 1 : 0;
+
+                modified[carrierIndex] &= (byte) ~(1 << bitPosition); // Clear the bit
+                modified[carrierIndex] |= (byte) (flagBit << bitPosition); // Set the bit
+
+                bitIndex++;
+            }
         }
 
         return modified;
     }
 
     public static byte[] extract(byte[] carrierData, int numBytes, boolean[] isBorder) {
-        int totalBitsToExtract = numBytes * 8;
-        int carrierCapacity = carrierData.length;
 
         byte[] result = new byte[numBytes];
+        int carrierCapacity = carrierData.length;
         int bitIndex = 0;
 
-        while (bitIndex < totalBitsToExtract) {
-            int bitPosition = (bitIndex / carrierCapacity) % 8;
+        for (int i = 0; i < numBytes; i++) {
+            int value = 0;
 
-            int carrierIndex = bitIndex % carrierCapacity;
-            int bit = (carrierData[carrierIndex] >> bitPosition) & 1;
+            // Extract 8 bits of the value
+            for (int bit = 0; bit < 8; bit++) {
+                int carrierIndex = bitIndex % carrierCapacity;
+                int bitPosition = (bitIndex / carrierCapacity) % 8;
 
-            int byteIndex = bitIndex / 8;
-            result[byteIndex] = (byte) ((result[byteIndex] << 1) | bit);
+                int bitValue = (carrierData[carrierIndex] >> bitPosition) & 1;
+                value = (value << 1) | bitValue;
 
-            // Handle the MSB for "border" cases
-            if (bitIndex % 8 == 7) { // First byte of the group
-                int msbPosition = 7 - ((bitIndex / carrierCapacity) % 8); // Cycle through MSB, 2nd MSB, ...
-                int msb = (carrierData[carrierIndex] >> msbPosition) & 1;
-                isBorder[byteIndex] = (msb == 1);
+                bitIndex++;
             }
 
-            bitIndex++;
-        }
+            result[i] = (byte) value;
 
+            // Extract the 9th bit (flag) if the value is 255
+            if (value == 255) {
+                int carrierIndex = bitIndex % carrierCapacity;
+                int bitPosition = (bitIndex / carrierCapacity) % 8;
+
+                int flagBit = (carrierData[carrierIndex] >> bitPosition) & 1;
+                isBorder[i] = (flagBit == 1);
+
+                bitIndex++;
+            } else {
+                isBorder[i] = false;
+            }
+        }
         return result;
+
     }
 }

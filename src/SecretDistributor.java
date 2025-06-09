@@ -9,6 +9,7 @@ public class SecretDistributor {
     private final byte[] permutedSecret;
     private final int k;
     private final int n;
+    private final String dir;
     private final int secretWidth;
     private final int secretHeight;
     private final BmpImage secretImage;
@@ -22,7 +23,7 @@ public class SecretDistributor {
      * @param secretHeight The height of the secret image
      * @param secretImage The BmpImage of the secret
      */
-    public SecretDistributor(byte[] permutedSecret, int k, int n, int secretWidth, int secretHeight, BmpImage secretImage) {
+    public SecretDistributor(byte[] permutedSecret, int k, int n, int secretWidth, int secretHeight, BmpImage secretImage, String dir) {
         if (permutedSecret.length % k != 0) {
             throw new IllegalArgumentException("La cantidad de bytes del secreto no es divisible por k. " +
                     "No se pueden formar polinomios completos.");
@@ -42,6 +43,7 @@ public class SecretDistributor {
         this.secretWidth = secretWidth;
         this.secretHeight = secretHeight;
         this.secretImage = secretImage;
+        this.dir = dir;
     }
 
     public int getCantidadPolinomios() {
@@ -54,7 +56,7 @@ public class SecretDistributor {
      * @throws Exception If there is an error during distribution
      */
     public void distribute(int seed) throws Exception {
-        File carpeta = new File("resources/preSombras");
+        File carpeta = new File(dir);
         File[] archivos = carpeta.listFiles((f, name) -> name.toLowerCase().endsWith(".bmp"));
         if (archivos == null || archivos.length < n) {
             throw new IllegalArgumentException("No hay suficientes imágenes BMP en el directorio: resources/preSombras");
@@ -131,7 +133,7 @@ public class SecretDistributor {
             // Store shadow number in bytes 8-9 (little endian)
             img.setReservedBytes(8, (short) sombraId);
             // Store number of polynomials in bytes 34-35
-            img.setReservedBytes(34, (short) cantidadPolinomios);
+            img.setAmountOfBytesToEmbed(34, cantidadPolinomios);
 
             String nombreSalida = String.format("resources/sombras/sombra%d.bmp", sombraId);
             img.save(nombreSalida);

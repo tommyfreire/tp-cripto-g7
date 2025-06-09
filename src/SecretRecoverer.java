@@ -108,10 +108,6 @@ public class SecretRecoverer {
         return recoveredPermuted;
     }
 
-    public String getReferenceHeader() {
-        return "reference_header.bmp";
-    }
-
     /**
      * Solves a system of linear equations modulo mod using Gauss-Jordan elimination.
      */
