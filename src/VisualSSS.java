@@ -106,7 +106,14 @@ public class VisualSSS {
             byte[] permutedSecret = recoverer.recover();
             int seed = recoverer.getSeed();
             byte[] originalSecret = originalSecret(seed, permutedSecret);
-            BmpImage outputImage = new BmpImage(hardcodedFacundoHeader(), originalSecret);
+            java.io.File carpeta = new java.io.File(dir);
+            java.io.File[] archivos = carpeta.listFiles((d, name) -> name.startsWith("sombra") && name.endsWith(".bmp"));
+            if (archivos == null || archivos.length == 0) {
+                printUsageAndExit("No se encontraron sombras en el directorio: " + dir);
+            }
+            BmpImage sombra = new BmpImage(archivos[0].getAbsolutePath());
+            byte[] header = sombra.getHeader();
+            BmpImage outputImage = new BmpImage(header, originalSecret);
             outputImage.save(secret);
             compararBMPs(secret, "resources/Facundo.bmp");
         } else {
