@@ -11,6 +11,7 @@ public class SecretDistributor {
     private final int n;
     private final int secretWidth;
     private final int secretHeight;
+    private final BmpImage secretImage;
 
     /**
      * Constructs a SecretDistributor.
@@ -19,8 +20,9 @@ public class SecretDistributor {
      * @param n The number of shares to create
      * @param secretWidth The width of the secret image
      * @param secretHeight The height of the secret image
+     * @param secretImage The BmpImage of the secret
      */
-    public SecretDistributor(byte[] permutedSecret, int k, int n, int secretWidth, int secretHeight) {
+    public SecretDistributor(byte[] permutedSecret, int k, int n, int secretWidth, int secretHeight, BmpImage secretImage) {
         if (permutedSecret.length % k != 0) {
             throw new IllegalArgumentException("La cantidad de bytes del secreto no es divisible por k. " +
                     "No se pueden formar polinomios completos.");
@@ -39,6 +41,7 @@ public class SecretDistributor {
         this.n = n;
         this.secretWidth = secretWidth;
         this.secretHeight = secretHeight;
+        this.secretImage = secretImage;
     }
 
     public int getCantidadPolinomios() {
@@ -61,7 +64,6 @@ public class SecretDistributor {
         for (int i = 0; i < n; i++) {
             String fileName = archivos[i].getName();
             BmpImage portadora = new BmpImage(archivos[i].getAbsolutePath());
-            
             // For k=8, crop the carrier image to match the secret image size
             if (k == 8) {
                 if (portadora.getWidth() != secretWidth || portadora.getHeight() != secretHeight) {
@@ -78,8 +80,9 @@ public class SecretDistributor {
                     portadora = portadora.cropToSize(secretWidth, secretHeight);
                 }
             }
-            
-            portadoras.add(portadora);
+            // Use the secret image's header for all shadows
+            BmpImage img = new BmpImage(secretImage.getHeader(), portadora.getPixelData());
+            portadoras.add(img);
         }
 
         int cantidadPolinomios = getCantidadPolinomios();

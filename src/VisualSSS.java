@@ -105,7 +105,8 @@ public class VisualSSS {
                 k, 
                 n,
                 secret_image.getWidth(),
-                secret_image.getHeight()
+                secret_image.getHeight(),
+                secret_image
             );
             distributor.distribute(seed);
         } else if (mode.equals("r")) {

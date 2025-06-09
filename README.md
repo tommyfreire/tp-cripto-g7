@@ -19,9 +19,10 @@ This project implements a visual secret sharing scheme for BMP images, combining
 
 ## Metadata and Header Handling (Updated)
 
+- **Secret Image Header:** The header of the original secret image is used for all generated shadow images. This ensures that the width and height of the recovered image will always match the original secret image, regardless of the carrier images used.
 - **Seed Storage:** The seed used for the permutation is stored in bytes 6-7 (little endian) of the BMP header of each shadow image.
 - **Shadow Number:** The shadow number (1, 2, ..., n) is stored in bytes 8-9 (little endian) of the BMP header of each shadow image.
-- **Header on Recovery:** When recovering the secret image, the header of the output BMP is taken from the first available shadow image in the selected directory. This ensures that the output BMP contains the correct metadata (including the seed and shadow number) in its reserved bytes, as required by the specification.
+- **Header on Recovery:** When recovering the secret image, the header of the output BMP is taken from any shadow image (not carrier image), which will always match the secret image's dimensions.
 - **Automatic Cropping (k=8):** If `k=8`, carrier images are automatically cropped (central crop) to match the secret image's size. This ensures all shadows and the recovered image have matching dimensions and metadata.
 
 ## How It Works
@@ -30,6 +31,9 @@ This project implements a visual secret sharing scheme for BMP images, combining
    - The secret image is permuted for extra security.
    - The permuted data is split using Shamir's Secret Sharing.
    - Each share is embedded into a carrier BMP image from `resources/preSombras/` using LSB steganography.
+   - **The header of the secret image is used for all shadow images, so the recovered image will always have the correct width and height.**
+   - **When using k=8, carrier images are automatically cropped to match the secret image size.**
+   - __REQUISITE__: **When using k≠8, the carrier images should have the same size as the secret image.** If this condition is not met, the program will run and recover the secret, but the shadows will be altered in the process.
    - Shadow images are saved in `resources/sombras/` with metadata in their headers:
      - The permutation seed is stored in bytes 6-7 (little endian).
      - The shadow number is stored in bytes 8-9 (little endian).
@@ -40,7 +44,8 @@ This project implements a visual secret sharing scheme for BMP images, combining
    - `k` shadow images are selected from `resources/sombras/`.
    - The embedded data is extracted and the original permuted secret is reconstructed using modular linear algebra.
    - The permutation is reversed to recover the original image.
-   - The BMP header for the output is taken from the first available shadow image, so the output BMP contains the correct seed and shadow number in its reserved bytes.
+   - **The BMP header for the output is taken from any shadow image (not carrier image), which always matches the secret image's dimensions.**
+   - **Note:** When using k=8, carrier images are automatically cropped to match the secret image size, so the header will always match. When using k≠8, carrier images must have the same size as the secret image; otherwise, the shadows (and thus the recovered image) may be altered or incorrect.
 
 ## Usage
 
