@@ -112,8 +112,6 @@ public class SecretDistributor {
 
             byte[] cuerpoModificado = LsbSteganography.embed(
                 pixelData,
-                img.getWidth(),
-                img.getHeight(),
                 valoresAOcultar,
                 isBorder
             );
