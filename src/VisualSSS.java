@@ -48,29 +48,22 @@ public class VisualSSS {
     /**
      * Compares two BMP images and prints the number of differing bytes.
      */
-    public static void compararBMPs(String originalPath, String recuperadoPath) throws Exception {
-        BmpImage original = new BmpImage(originalPath);
-        BmpImage recuperado = new BmpImage(recuperadoPath);
-        byte[] a = original.getPixelData();
-        byte[] b = recuperado.getPixelData();
-        if (a.length != b.length) {
-            System.out.println("❌ Las imágenes tienen diferente cantidad de bytes: " + a.length + " vs " + b.length);
-            return;
-        }
-        int errores = 0;
-        System.out.println("Total de diferencias: " + errores + " de " + a.length + " píxeles (" + (100.0 * errores / a.length) + "%)");
-        if (errores == 0) {
-            System.out.println("✅ ¡Las imágenes son idénticas!");
-        }
-    }
+    // public static void compararBMPs(String originalPath, String recuperadoPath) throws Exception {
+    //     BmpImage original = new BmpImage(originalPath);
+    //     BmpImage recuperado = new BmpImage(recuperadoPath);
+    //     byte[] a = original.getPixelData();
+    //     byte[] b = recuperado.getPixelData();
+    //     if (a.length != b.length) {
+    //         System.out.println("❌ Las imágenes tienen diferente cantidad de bytes: " + a.length + " vs " + b.length);
+    //         return;
+    //     }
+    //     int errores = 0;
+    //     System.out.println("Total de diferencias: " + errores + " de " + a.length + " píxeles (" + (100.0 * errores / a.length) + "%)");
+    //     if (errores == 0) {
+    //         System.out.println("✅ ¡Las imágenes son idénticas!");
+    //     }
+    // }
 
-    /**
-     * Returns the header of a hardcoded BMP image.
-     */
-    private static byte[] hardcodedFacundoHeader() throws IOException {
-        BmpImage alfred = new BmpImage("resources/Facundo.bmp");
-        return alfred.getHeader();
-    }
 
     /**
      * Main entry point for the application.
@@ -115,7 +108,7 @@ public class VisualSSS {
             byte[] header = sombra.getHeader();
             BmpImage outputImage = new BmpImage(header, originalSecret);
             outputImage.save(secret);
-            compararBMPs(secret, "resources/Facundo.bmp");
+            //compararBMPs(secret, "resources/Facundo.bmp");
         } else {
             printUsageAndExit("Error: modo inválido, debe ser -d o -r.");
         }
