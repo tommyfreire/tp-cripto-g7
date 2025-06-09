@@ -25,6 +25,25 @@ This project implements a visual secret sharing scheme for BMP images, combining
 - **Header on Recovery:** When recovering the secret image, the header of the output BMP is taken from any shadow image (not carrier image), which will always match the secret image's dimensions.
 - **Automatic Cropping (k=8):** If `k=8`, carrier images are automatically cropped (central crop) to match the secret image's size. This ensures all shadows and the recovered image have matching dimensions and metadata.
 
+## Carrier Image Validation and Secret Image Regeneration
+
+### (8, n) Scheme
+- All carrier images must be BMP format, 8 bits per pixel.
+- If there are not 8 images meeting these requirements, the program will show an error and do nothing.
+- When carrier images are bigger than the secret image, they are automatically cropped to match the secret image size if needed.
+- When carrier images are smaller than the secret image, the program will show an error and do nothing.
+
+### (k, n) Scheme with k ≠ 8
+- **Recommendation:** Use carrier images with the same size as the secret image to ensure correct recovery.
+- The program does **not** enforce that carrier images have the same size as the secret image or as each other.
+- When using a secret image smaller than the carrier images, the program will run and recover the secret, but the shadows will be altered in the process. This is the intended behavior: shadows with carrier images larger that the secret image will have strange patterns.
+- When using a secret image larger than the carrier images, the program will then show an error and exit. This is to limit the amount of bytes hidden in each shadow.
+- This approach is chosen for flexibility, but the user is responsible for providing compatible carrier images.
+
+### Secret Image Regeneration
+- Regardless of the scheme, the header of the secret image is used for all shadows.
+- During recovery, the output image is always generated with the original secret image's width and height, ensuring the recovered image matches the original secret.
+
 ## How It Works
 
 1. **Distribute Mode (`-d`):**

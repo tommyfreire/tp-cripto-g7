@@ -64,6 +64,12 @@ public class SecretDistributor {
         for (int i = 0; i < n; i++) {
             String fileName = archivos[i].getName();
             BmpImage portadora = new BmpImage(archivos[i].getAbsolutePath());
+            // Error if carrier is smaller than secret (for any k)
+            if (portadora.getWidth() < secretWidth || portadora.getHeight() < secretHeight) {
+                System.err.printf("Error: La imagen portadora %d (%s) es más pequeña (%dx%d) que la imagen secreta (%dx%d).\n", i + 1, fileName, portadora.getWidth(), portadora.getHeight(), secretWidth, secretHeight);
+                System.err.println("No se puede continuar. Todas las portadoras deben ser al menos del tamaño de la imagen secreta.");
+                System.exit(1);
+            }
             // For k=8, crop the carrier image to match the secret image size
             if (k == 8) {
                 if (portadora.getWidth() != secretWidth || portadora.getHeight() != secretHeight) {
