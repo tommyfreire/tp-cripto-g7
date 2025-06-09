@@ -118,11 +118,11 @@ public class SecretDistributor {
             img.setPixelData(cuerpoModificado);
 
             // Store seed in bytes 6-7 (little endian)
-            img.setReservedBytes(6, seed);
+            img.setReservedBytes(6, (short) seed);
             // Store shadow number in bytes 8-9 (little endian)
-            img.setReservedBytes(8, sombraId);
+            img.setReservedBytes(8, (short) sombraId);
             // Store number of polynomials in bytes 34-35
-            img.setReservedBytes(34, cantidadPolinomios);
+            img.setReservedBytes(34, (short) cantidadPolinomios);
 
             String nombreSalida = String.format("resources/sombras/sombra%d.bmp", sombraId);
             img.save(nombreSalida);

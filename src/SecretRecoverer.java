@@ -35,7 +35,7 @@ public class SecretRecoverer {
      * Gets the permutation seed from the first shadow image.
      * @return The seed value
      */
-    public int getSeed() {
+    public short getSeed() {
         try {
             File carpeta = new File(dir);
             File[] archivos = carpeta.listFiles((d, name) -> name.startsWith("sombra") && name.endsWith(".bmp"));

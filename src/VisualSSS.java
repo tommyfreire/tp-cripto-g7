@@ -12,8 +12,8 @@ public class VisualSSS {
     /**
      * Permutes the secret using a permutation table generated from the seed.
      */
-    private static byte[] permuteSecret(int seed, byte[] secretTest) {
-        PermutationTable tabla = new PermutationTable(seed, secretTest.length);
+    private static byte[] permuteSecret(short seed, byte[] secretTest) {
+        PermutationTable tabla = new PermutationTable(seed & 0xFFFF, secretTest.length);
         byte[] permutedSecret = new byte[secretTest.length];
         for (int i = 0; i < secretTest.length; i++) {
             int original = Byte.toUnsignedInt(secretTest[i]);
@@ -26,15 +26,15 @@ public class VisualSSS {
     /**
      * Generates a random seed for permutation.
      */
-    private static int generateSeed() {
-        return (int) (Math.random() * 65535);
+    private static short generateSeed() {
+        return (short) (Math.random() * 65536);
     }
 
     /**
      * Recovers the original secret from the permuted secret and seed.
      */
-    private static byte[] originalSecret(int seed, byte[] permutedSecret) {
-        PermutationTable tabla = new PermutationTable(seed, permutedSecret.length);
+    private static byte[] originalSecret(short seed, byte[] permutedSecret) {
+        PermutationTable tabla = new PermutationTable(seed & 0xFFFF, permutedSecret.length);
         byte[] originalSecret = new byte[permutedSecret.length];
         for (int i = 0; i < permutedSecret.length; i++) {
             int permuted = Byte.toUnsignedInt(permutedSecret[i]);
@@ -86,7 +86,17 @@ public class VisualSSS {
             if (!new java.io.File(secret).exists()) {
                 printUsageAndExit("Error: el archivo secreto no existe");
             }
-            int seed = 32767;//generateSeed();
+            // Delete old shadows before distributing new ones
+            java.io.File sombrasDir = new java.io.File(dir);
+            if (sombrasDir.exists() && sombrasDir.isDirectory()) {
+                java.io.File[] oldShadows = sombrasDir.listFiles((d, name) -> name.startsWith("sombra") && name.endsWith(".bmp"));
+                if (oldShadows != null) {
+                    for (java.io.File f : oldShadows) {
+                        f.delete();
+                    }
+                }
+            }
+            short seed = generateSeed();
             BmpImage secret_image = new BmpImage(secret);
             byte[] originalSecret = secret_image.getPixelData();
             byte[] permutedSecret = permuteSecret(seed, originalSecret);
@@ -99,15 +109,18 @@ public class VisualSSS {
             );
             distributor.distribute(seed);
         } else if (mode.equals("r")) {
-            SecretRecoverer recoverer = new SecretRecoverer(k, n, dir);
-            byte[] permutedSecret = recoverer.recover();
-            int seed = recoverer.getSeed();
-            byte[] originalSecret = originalSecret(seed, permutedSecret);
             java.io.File carpeta = new java.io.File(dir);
             java.io.File[] archivos = carpeta.listFiles((d, name) -> name.startsWith("sombra") && name.endsWith(".bmp"));
             if (archivos == null || archivos.length == 0) {
                 printUsageAndExit("No se encontraron sombras en el directorio: " + dir);
             }
+            if (archivos.length < n) {
+                printUsageAndExit("No hay suficientes sombras en el directorio: se requieren al menos " + n + ", pero solo hay " + archivos.length);
+            }
+            SecretRecoverer recoverer = new SecretRecoverer(k, n, dir);
+            byte[] permutedSecret = recoverer.recover();
+            short seed = recoverer.getSeed();
+            byte[] originalSecret = originalSecret(seed, permutedSecret);
             BmpImage sombra = new BmpImage(archivos[0].getAbsolutePath());
             byte[] header = sombra.getHeader();
             BmpImage outputImage = new BmpImage(header, originalSecret);
