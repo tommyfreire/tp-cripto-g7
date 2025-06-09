@@ -97,10 +97,10 @@ public class BmpImage {
     /**
      * Sets a 2-byte value in the header at the specified position in little endian format.
      * @param position The starting position in the header (0-based)
-     * @param value The 2-byte value to store
+     * @param value The 2-byte value to store (unsigned 16-bit)
      */
-    public void setReservedBytes(int position, short value) {
-        // Store in little endian format
+    public void setReservedBytes(int position, int value) {
+        // Store in little endian format (unsigned 16-bit)
         header[position] = (byte) (value & 0xFF);         // Least significant byte
         header[position + 1] = (byte) ((value >> 8) & 0xFF); // Most significant byte
     }
@@ -108,11 +108,11 @@ public class BmpImage {
     /**
      * Gets a 2-byte value from the header at the specified position in little endian format.
      * @param position The starting position in the header (0-based)
-     * @return The 2-byte value
+     * @return The 2-byte value (unsigned 16-bit)
      */
-    public short getReservedBytes(int position) {
-        // Read in little endian format
-        return (short) (((header[position + 1] & 0xFF) << 8) | (header[position] & 0xFF));
+    public int getReservedBytes(int position) {
+        // Read in little endian format (unsigned 16-bit)
+        return ((header[position + 1] & 0xFF) << 8) | (header[position] & 0xFF);
     }
 
     /**

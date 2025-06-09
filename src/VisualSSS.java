@@ -86,7 +86,7 @@ public class VisualSSS {
             if (!new java.io.File(secret).exists()) {
                 printUsageAndExit("Error: el archivo secreto no existe");
             }
-            int seed = generateSeed();
+            int seed = 32767;//generateSeed();
             BmpImage secret_image = new BmpImage(secret);
             byte[] originalSecret = secret_image.getPixelData();
             byte[] permutedSecret = permuteSecret(seed, originalSecret);
