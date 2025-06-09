@@ -17,20 +17,30 @@ This project implements a visual secret sharing scheme for BMP images, combining
 - **Generated shadow images:** `resources/sombras/`
 - **Default recovery location:** `resources/sombras/`
 
+## Metadata and Header Handling (Updated)
+
+- **Seed Storage:** The seed used for the permutation is stored in bytes 6-7 (little endian) of the BMP header of each shadow image.
+- **Shadow Number:** The shadow number (1, 2, ..., n) is stored in bytes 8-9 (little endian) of the BMP header of each shadow image.
+- **Header on Recovery:** When recovering the secret image, the header of the output BMP is taken from the first available shadow image in the selected directory. This ensures that the output BMP contains the correct metadata (including the seed and shadow number) in its reserved bytes, as required by the specification.
+- **Automatic Cropping (k=8):** If `k=8`, carrier images are automatically cropped (central crop) to match the secret image's size. This ensures all shadows and the recovered image have matching dimensions and metadata.
+
 ## How It Works
 
 1. **Distribute Mode (`-d`):**
    - The secret image is permuted for extra security.
    - The permuted data is split using Shamir's Secret Sharing.
    - Each share is embedded into a carrier BMP image from `resources/preSombras/` using LSB steganography.
-   - Shadow images are saved in `resources/sombras/` with metadata in their headers.
+   - Shadow images are saved in `resources/sombras/` with metadata in their headers:
+     - The permutation seed is stored in bytes 6-7 (little endian).
+     - The shadow number is stored in bytes 8-9 (little endian).
+   - If `k=8`, carrier images are automatically cropped to match the secret image size (central crop).
    - If any polynomial evaluation yields 256, the first nonzero coefficient is decremented and the process is retried until all values are in [0, 255].
 
 2. **Recover Mode (`-r`):**
    - `k` shadow images are selected from `resources/sombras/`.
    - The embedded data is extracted and the original permuted secret is reconstructed using modular linear algebra.
    - The permutation is reversed to recover the original image.
-   - The BMP header for the output is taken from the first available pre-shadow image in `resources/preSombras/`.
+   - The BMP header for the output is taken from the first available shadow image, so the output BMP contains the correct seed and shadow number in its reserved bytes.
 
 ## Usage
 
@@ -158,7 +168,7 @@ tp-cripto-g7/
 
 - The number of bytes in the secret image must be divisible by `k`.
 - The carrier images must be at least as large as the secret image.
-- The program stores metadata (seed, shadow ID, etc.) in reserved bytes of the BMP header.
+- The program stores metadata (seed, shadow ID, etc.) in reserved bytes of the BMP header. The recovered image will also have these fields set, as its header is copied from a shadow image.
 - The script automates compilation and directory management for you.
 - The algorithm dynamically adjusts coefficients to avoid 256 in shadow pixels, as per the referenced paper.
 
