@@ -12,7 +12,7 @@ BIN_DIR="bin"
 MAIN_CLASS="VisualSSS"
 DEFAULT_RESOURCES="resources"
 DEFAULT_SHADOWS="resources/sombras"
-DEFAULT_OUTPUT="resources/recuperado.bmp"
+DEFAULT_OUTPUT="resources/recovered/recuperado.bmp"
 
 function usage() {
   echo "Uso: $0 -d|-r [opciones]"
@@ -40,11 +40,11 @@ function clean_files() {
       fi
     fi
   done
-  if [ -f "$DEFAULT_RESOURCES/$DEFAULT_OUTPUT" ]; then
-    echo "Archivo de salida encontrado: $DEFAULT_RESOURCES/$DEFAULT_OUTPUT"
+  if [ -f "$DEFAULT_OUTPUT" ]; then
+    echo "Archivo de salida encontrado: $DEFAULT_OUTPUT"
     read -p "¿Eliminar este archivo? [y/N] " yn
     if [[ "$yn" =~ ^[Yy]$ ]]; then
-      rm "$DEFAULT_RESOURCES/$DEFAULT_OUTPUT"
+      rm "$DEFAULT_OUTPUT"
       echo "Eliminado."
     else
       echo "Omitido."
