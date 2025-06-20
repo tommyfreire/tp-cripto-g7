@@ -1,6 +1,7 @@
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Distributes a permuted secret into n shadow images using Shamir's Secret Sharing and LSB steganography.
@@ -85,72 +86,64 @@ public class SecretDistributor {
 
         int cantidadPolinomios = getCantidadPolinomios();
 
-        for (int sombraId = 1; sombraId <= n; sombraId++) {
-            BmpImage img = portadoras.get(sombraId - 1);
-            byte[] pixelData = img.getPixelData();
-            byte[] valoresAOcultar = new byte[cantidadPolinomios];
+        byte[][] valoresAOcultar = new byte[n][cantidadPolinomios];
 
-            for (int j = 0; j < cantidadPolinomios; j++) {
-                valoresAOcultar[j] = (byte) evaluarPolinomio(sombraId,j);
+        for (int j = 0; j < cantidadPolinomios; j++) {
+            boolean coefficientsUpdated;
+            do {
+                coefficientsUpdated = false;
+                for (int sombraId = 1; sombraId <= n; sombraId++) {
+                    int resultado = evaluarPolinomio(sombraId, j) % 257;
+                    if (resultado == 256) {
+                        boolean decremented = false;
+                        for (int i = 0; i < k; i++) {
+                            int coef = Byte.toUnsignedInt(permutedSecret[j * k + i]);
+                            if (coef != 0) {
+                                permutedSecret[j * k + i]--;
+                                decremented = true;
+                                coefficientsUpdated = true;
+                                break;
+                            }
+                        }
+                        if (!decremented) {
+                            throw new IllegalStateException("All coefficients are zero; cannot decrement further.");
+                        }
+                    }
+                }
+            } while (coefficientsUpdated);
+
+            for (int i = 0; i < n; i++) {
+                int sombraId = i + 1;
+                valoresAOcultar[i][j] = (byte) (evaluarPolinomio(sombraId, j) % 257);
             }
+        }
 
-            byte[] cuerpoModificado = LsbSteganography.embed(
-                pixelData,
-                valoresAOcultar
-            );
+        for(int i=0; i<n; i++) {
+            BmpImage img = portadoras.get(i);
+            byte[] pixelData = img.getPixelData();
+            byte[] cuerpoModificado = LsbSteganography.embed(pixelData, valoresAOcultar[i]);
             img.setPixelData(cuerpoModificado);
-
             // Store seed in bytes 6-7 (little endian)
             img.setReservedBytes(6, (short) seed);
             // Store shadow number in bytes 8-9 (little endian)
-            img.setReservedBytes(8, (short) sombraId);
+            img.setReservedBytes(8, (short) (i+1));
             // Store number of polynomials in bytes 34-35
             img.setAmountOfBytesToEmbed(34, cantidadPolinomios);
-
-            String nombreSalida = String.format("resources/sombras/sombra%d.bmp", sombraId);
+            String nombreSalida = String.format("resources/sombras/sombra%d.bmp", (i+1));
             img.save(nombreSalida);
         }
+
     }
+
 
     private int evaluarPolinomio(int sombraId, int j) {
         int inicio = j * k;
-
-        int resultado = evaluarHelper(sombraId, inicio) % 257;
-
-        // Continue adjusting coefficients until the result is valid
-        while (resultado == 256) {
-            boolean decremented = false;
-            int i = 0;
-
-            // Find and decrement the first non-zero coefficient
-            while (!decremented && i < k) {
-                int coef = Byte.toUnsignedInt(permutedSecret[inicio + i]);
-                if (coef != 0) {
-                    permutedSecret[inicio + i]--;
-                    decremented = true;
-                } else {
-                    i++;
-                }
-            }
-
-            // If no coefficient can be decremented, exit the loop
-            if (!decremented) {
-                throw new IllegalStateException("All coefficients are zero; cannot decrement further.");
-            }
-
-            // Re-evaluate the polynomial
-            resultado = evaluarHelper(sombraId, inicio) % 257;
-        }
-
-        return resultado;
-    }
-
-    private int evaluarHelper(int sombraId, int inicio) {
         int resultado = 0;
         for (int i = 0; i < k; i++) {
-            int coef = Byte.toUnsignedInt(permutedSecret[inicio + i]);
-            resultado += coef * (int) Math.pow(sombraId, i);
+            int coeficiente = Byte.toUnsignedInt(permutedSecret[inicio + i]);
+            resultado += coeficiente * (int) Math.pow(sombraId, i);
         }
         return resultado;
     }
+
 }
