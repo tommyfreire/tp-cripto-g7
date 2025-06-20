@@ -31,11 +31,11 @@ function clean_files() {
   echo "Eliminando archivos de sombras y de salida generados..."
   for dir in "$DEFAULT_RESOURCES" "$DEFAULT_SHADOWS"; do
     if [ -d "$dir" ]; then
-      found=$(ls "$dir"/sombra*.bmp 2>/dev/null | wc -l)
+      found=$(find "$dir" -maxdepth 1 -type f -name '*.bmp' 2>/dev/null | wc -l)
       if [ "$found" -gt 0 ]; then
         echo "Archivos de sombras encontrados en $dir:"
-        ls "$dir"/sombra*.bmp
-        rm "$dir"/sombra*.bmp
+        find "$dir" -maxdepth 1 -type f -name '*.bmp'
+        find "$dir" -maxdepth 1 -type f -name '*.bmp' -exec rm {} \;
         echo "Eliminadas."
       fi
     fi
@@ -145,10 +145,13 @@ if [ -z "$DIR" ]; then
 fi
 
 if [ "$MODE" == "-d" ]; then
-  if [ -n "$N" ]; then
-    JAVA_CMD+=" -n $N"
-  fi
-  JAVA_CMD+=" -dir $DIR"
+  echo "Compilando archivos fuente de Java..."
+  COMPILE_CMD="javac -d $BIN_DIR src/VisualSSS.java src/SecretDistributor.java src/SecretRecoverer.java src/LsbSteganography.java src/BmpImage.java src/PermutationTable.java"
+  echo "Corriendo: $COMPILE_CMD"
+  $COMPILE_CMD
+fi
+
+if [ "$MODE" == "-r" ]; then
   echo "Compilando archivos fuente de Java..."
   COMPILE_CMD="javac -d $BIN_DIR src/VisualSSS.java src/SecretDistributor.java src/SecretRecoverer.java src/LsbSteganography.java src/BmpImage.java src/PermutationTable.java"
   echo "Corriendo: $COMPILE_CMD"
@@ -157,19 +160,10 @@ fi
 
 # Build the Java command
 JAVA_CMD="java -cp $BIN_DIR $MAIN_CLASS $MODE -secret $SECRET -k $K"
-if [ "$MODE" == "-d" ]; then
-  if [ -n "$N" ]; then
-    JAVA_CMD+=" -n $N"
-  fi
-  JAVA_CMD+=" -dir $DIR"
-else
-  if [ -n "$N" ]; then
-    JAVA_CMD+=" -n $N"
-  fi
-  JAVA_CMD+=" -dir $DIR"
-fi
+JAVA_CMD+=" -n $N"
+JAVA_CMD+=" -dir $DIR"
 
 echo "Corriendo: $JAVA_CMD"
 $JAVA_CMD
 
-echo "Puedes correr '$0 clean' para eliminar los archivos de sombras y el archivo recuperado." 
+echo "Puedes correr '$0 clean' para eliminar los archivos de sombras y el archivo recuperado."

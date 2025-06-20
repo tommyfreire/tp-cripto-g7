@@ -38,7 +38,7 @@ public class SecretRecoverer {
     public short getSeed() {
         try {
             File carpeta = new File(dir);
-            File[] archivos = carpeta.listFiles((d, name) -> name.startsWith("sombra") && name.endsWith(".bmp"));
+            File[] archivos = carpeta.listFiles((d, name) -> name.endsWith(".bmp"));
             if (archivos == null || archivos.length == 0) {
                 throw new IOException("No se encontraron sombras en el directorio: " + dir);
             }
@@ -56,7 +56,7 @@ public class SecretRecoverer {
      */
     public byte[] recover() throws IOException {
         File carpeta = new File(dir);
-        File[] archivos = carpeta.listFiles((d, name) -> name.startsWith("sombra") && name.endsWith(".bmp"));
+        File[] archivos = carpeta.listFiles((d, name) -> name.endsWith(".bmp"));
         if (archivos == null || archivos.length < k) {
             throw new IllegalArgumentException("No hay al menos " + k + " sombras en el directorio.");
         }
@@ -70,23 +70,25 @@ public class SecretRecoverer {
             sombras.add(bmp);
             sombraIds[i] = bmp.getReservedBytes(8);
         }
-        int q = sombras.get(0).getIntFromHeader(34);
+        BmpImage auxShadow = sombras.getFirst();
+        int q;
+        if(k != 8) {
+            q = auxShadow.getIntFromHeader(34);
+        } else {
+            q = auxShadow.getPixelData().length / k;
+        }
         if (q <= 0) {
             throw new IllegalArgumentException("Valor de q inválido: " + q);
         }
         byte[][] extracted = new byte[k][q];
-        boolean[][] isBorder = new boolean[k][q];
         for (int i = 0; i < k; i++) {
-            extracted[i] = LsbSteganography.extract(sombras.get(i).getPixelData(), q, isBorder[i]);
+            extracted[i] = LsbSteganography.extract(sombras.get(i).getPixelData(), q);
         }
         byte[] recoveredPermuted = new byte[q * k];
         for (int j = 0; j < q; j++) {
             int[] y = new int[k];
             for (int i = 0; i < k; i++) {
                 int aux = Byte.toUnsignedInt(extracted[i][j]);
-                if(aux == 255) {
-                    aux = (isBorder[i][j]) ? 256 : 255;
-                }
                 y[i] = aux;
             }
             int[] x = sombraIds;

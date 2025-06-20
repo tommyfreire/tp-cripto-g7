@@ -7,18 +7,18 @@ import java.util.Map;
  */
 public class VisualSSS {
 
-    /**
-     * Permutes the secret using a permutation table generated from the seed.
-     */
-    private static byte[] permuteSecret(short seed, byte[] secretTest) {
-        PermutationTable tabla = new PermutationTable(seed & 0xFFFF, secretTest.length);
-        byte[] permutedSecret = new byte[secretTest.length];
-        for (int i = 0; i < secretTest.length; i++) {
-            int original = Byte.toUnsignedInt(secretTest[i]);
-            int randomVal = Byte.toUnsignedInt(tabla.getAt(i));
-            permutedSecret[i] = (byte) ((original + randomVal) % 256);
+
+    public static byte[] permuteArray(short seed, byte[] array) {
+        // Generate the random image R using the seed
+        PermutationTable table = new PermutationTable(seed & 0xFFFF, array.length);
+        byte[] toReturn = new byte[array.length];
+
+        // Perform XOR operation between Q and R to recover O'
+        for (int i = 0; i < array.length; i++) {
+            toReturn[i] = (byte) (array[i] ^ table.getAt(i));
         }
-        return permutedSecret;
+
+        return toReturn;
     }
 
     /**
@@ -28,20 +28,6 @@ public class VisualSSS {
         return (short) (Math.random() * 65536);
     }
 
-    /**
-     * Recovers the original secret from the permuted secret and seed.
-     */
-    private static byte[] originalSecret(short seed, byte[] permutedSecret) {
-        PermutationTable tabla = new PermutationTable(seed & 0xFFFF, permutedSecret.length);
-        byte[] originalSecret = new byte[permutedSecret.length];
-        for (int i = 0; i < permutedSecret.length; i++) {
-            int permuted = Byte.toUnsignedInt(permutedSecret[i]);
-            int randomVal = Byte.toUnsignedInt(tabla.getAt(i));
-            int original = (permuted - randomVal + 256) % 256;
-            originalSecret[i] = (byte) original;
-        }
-        return originalSecret;
-    }
 
     public static void compararBMPs(String originalPath, String recuperadoPath) throws Exception {
         BmpImage original = new BmpImage(originalPath);
@@ -100,7 +86,7 @@ public class VisualSSS {
             short seed = generateSeed();
             BmpImage secret_image = new BmpImage(secret);
             byte[] originalSecret = secret_image.getPixelData();
-            byte[] permutedSecret = permuteSecret(seed, originalSecret);
+            byte[] permutedSecret = permuteArray(seed, originalSecret);
             SecretDistributor distributor = new SecretDistributor(
                 permutedSecret, 
                 k, 
@@ -113,7 +99,7 @@ public class VisualSSS {
             distributor.distribute(seed);
         } else if (mode.equals("r")) {
             File carpeta = new File(dir);
-            File[] archivos = carpeta.listFiles((d, name) -> name.startsWith("sombra") && name.endsWith(".bmp"));
+            File[] archivos = carpeta.listFiles((d, name) -> name.endsWith(".bmp"));
             if (archivos == null || archivos.length == 0) {
                 printUsageAndExit("No se encontraron sombras en el directorio: " + dir);
             }
@@ -123,12 +109,11 @@ public class VisualSSS {
             SecretRecoverer recoverer = new SecretRecoverer(k, n, dir);
             byte[] permutedSecret = recoverer.recover();
             short seed = recoverer.getSeed();
-            byte[] originalSecret = originalSecret(seed, permutedSecret);
+            byte[] originalSecret = permuteArray(seed, permutedSecret);
             BmpImage sombra = new BmpImage(archivos[0].getAbsolutePath());
             byte[] header = sombra.getHeader();
             BmpImage outputImage = new BmpImage(header, originalSecret);;
             outputImage.save(secret);
-            System.out.println("Secreto recuperado y guardado en: " + secret);
         } else {
             printUsageAndExit("Error: modo inválido, debe ser -d o -r.");
         }
